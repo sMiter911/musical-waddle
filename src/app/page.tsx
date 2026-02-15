@@ -1,65 +1,312 @@
-import Image from "next/image";
+import Link from "next/link";
+import HeroBanner from "@/components/ui/HeroBanner";
+import SectionHeading from "@/components/ui/SectionHeading";
+import { Users, Scale, Heart, Shield, Megaphone, Globe } from "lucide-react";
 
-export default function Home() {
+const features = [
+  {
+    icon: Scale,
+    title: "Democracy & Justice",
+    description:
+      "We fight for a multiparty democratic system where every citizen has an equal voice in the governance of Eswatini.",
+  },
+  {
+    icon: Shield,
+    title: "Human Rights",
+    description:
+      "Protecting fundamental freedoms — freedom of speech, assembly, and association for all Swazis.",
+  },
+  {
+    icon: Users,
+    title: "People's Power",
+    description:
+      "Empowering communities through grassroots organizing and civic education across all branches.",
+  },
+  {
+    icon: Heart,
+    title: "Social Welfare",
+    description:
+      "Advocating for accessible healthcare, quality education, and economic opportunity for every citizen.",
+  },
+  {
+    icon: Megaphone,
+    title: "Free Press",
+    description:
+      "Supporting independent media and the right of all citizens to access information freely.",
+  },
+  {
+    icon: Globe,
+    title: "International Solidarity",
+    description:
+      "Building alliances with democratic movements worldwide to strengthen our cause for liberation.",
+  },
+];
+
+const stats = [
+  { number: "40+", label: "Years of Struggle" },
+  { number: "56", label: "Branches Nationwide" },
+  { number: "8", label: "Regional Structures" },
+  { number: "1000s", label: "Active Members" },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <>
+      {/* ── Hero ── */}
+      <HeroBanner
+        title="Power to the People"
+        subtitle="For over 40 years, PUDEMO has been the voice of the Swazi people in the fight for multiparty democracy, justice, and human rights."
+        primaryCta={{ label: "Join the Movement", href: "/contributions" }}
+        secondaryCta={{ label: "Read Our Manifesto", href: "/manifesto" }}
+      />
+
+      {/* ── What We Stand For ── */}
+      <section className="section">
+        <div className="container">
+          <SectionHeading
+            label="Our Pillars"
+            title="What We Stand For"
+            subtitle="PUDEMO is guided by principles of democracy, equality, and justice. These pillars define our struggle and our vision for Eswatini."
+          />
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: "clamp(1.25rem, 4vw, 2rem)",
+            }}
+          >
+            {features.map((feature, i) => (
+              <div key={i} className="card">
+                <div
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: "var(--radius)",
+                    background: "var(--light)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: "1.25rem",
+                  }}
+                >
+                  <feature.icon size={24} style={{ color: "var(--primary)" }} />
+                </div>
+                <h3
+                  style={{
+                    fontSize: "1.125rem",
+                    fontWeight: 700,
+                    marginBottom: "0.5rem",
+                    color: "var(--dark)",
+                  }}
+                >
+                  {feature.title}
+                </h3>
+                <p
+                  style={{
+                    fontSize: "0.938rem",
+                    lineHeight: 1.7,
+                    color: "var(--gray-500)",
+                  }}
+                >
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats Counter ── */}
+      <section
+        className="section-dark"
+        style={{ padding: "clamp(3rem, 8vw, 5rem) clamp(1rem, 4vw, 1.5rem)" }}
+      >
+        <div className="container">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "clamp(1.5rem, 4vw, 3rem)",
+              textAlign: "center",
+            }}
+          >
+            {stats.map((stat, i) => (
+              <div key={i}>
+                <div
+                  style={{
+                    fontSize: "clamp(2.5rem, 5vw, 3.5rem)",
+                    fontWeight: 800,
+                    color: "var(--secondary)",
+                    lineHeight: 1,
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  {stat.number}
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.938rem",
+                    fontWeight: 500,
+                    color: "var(--gray-400)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Our Mission ── */}
+      <section className="section" style={{ background: "var(--light)" }}>
+        <div className="container">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: "clamp(1.5rem, 4vw, 2.5rem)",
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <SectionHeading
+                label="Our Mission"
+                title="A Free and Democratic Eswatini"
+                subtitle=""
+                centered={false}
+              />
+              <p
+                style={{
+                  fontSize: "1.063rem",
+                  lineHeight: 1.8,
+                  color: "var(--gray-600)",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                The People&apos;s United Democratic Movement (PUDEMO) was
+                founded in 1983 as a response to the oppressive monarchical rule
+                in Eswatini. Our mission is to establish a multiparty democratic
+                system where power belongs to the people.
+              </p>
+              <p
+                style={{
+                  fontSize: "1.063rem",
+                  lineHeight: 1.8,
+                  color: "var(--gray-600)",
+                  marginBottom: "2rem",
+                }}
+              >
+                We believe in the inherent dignity and rights of every Swazi
+                citizen. Through peaceful resistance, civic education, and
+                international solidarity, we continue to fight for the day when
+                Eswatini is truly free.
+              </p>
+              <Link href="/about" className="btn btn-primary">
+                Learn Our History
+              </Link>
+            </div>
+            <div
+              style={{
+                background: "var(--dark)",
+                borderRadius: "var(--radius-xl)",
+                padding: "clamp(1.5rem, 5vw, 3rem)",
+                color: "#fff",
+              }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+              <blockquote>
+                <p
+                  style={{
+                    fontSize: "1.25rem",
+                    fontWeight: 500,
+                    lineHeight: 1.7,
+                    fontStyle: "italic",
+                    marginBottom: "1.5rem",
+                  }}
+                >
+                  &ldquo;No force on earth can stop a people determined to be
+                  free. Our struggle is just, our cause is righteous, and
+                  victory is certain.&rdquo;
+                </p>
+                <footer
+                  style={{ display: "flex", alignItems: "center", gap: "1rem" }}
+                >
+                  <div
+                    style={{
+                      width: 4,
+                      height: 40,
+                      background: "var(--primary)",
+                      borderRadius: 2,
+                    }}
+                  />
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: "0.938rem" }}>
+                      Mario Masuku
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.813rem",
+                        color: "var(--gray-400)",
+                      }}
+                    >
+                      Former President of PUDEMO
+                    </div>
+                  </div>
+                </footer>
+              </blockquote>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA Section ── */}
+      <section
+        style={{
+          background:
+            "linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)",
+          padding: "clamp(3rem, 8vw, 5rem) clamp(1rem, 4vw, 1.5rem)",
+          textAlign: "center",
+          color: "#fff",
+        }}
+      >
+        <div className="container">
+          <h2 className="heading-lg" style={{ marginBottom: "1rem" }}>
+            Join the Movement
+          </h2>
+          <p
+            style={{
+              fontSize: "1.125rem",
+              opacity: 0.9,
+              maxWidth: 600,
+              margin: "0 auto 2.5rem",
+              lineHeight: 1.7,
+            }}
+          >
+            Whether you donate, volunteer, or simply spread the word — every
+            action brings us closer to a free Eswatini.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <div
+            style={{
+              display: "flex",
+              gap: "clamp(0.75rem, 2vw, 1.5rem)",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              flexDirection: "column",
+            }}
+            className="sm:flex-row"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <Link href="/contributions" className="btn btn-secondary btn-lg">
+              Contribute Now
+            </Link>
+            <Link href="/contact" className="btn btn-outline btn-lg">
+              Get in Touch
+            </Link>
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+    </>
   );
 }

@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── BetterAuth Models ────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          String    @default("user") // "user" | "admin"
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+  accounts      Account[]
+  member        Member?
+  activityLogs  ActivityLog[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                    String  @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Domain Models ────────────────────────────────────────────────
+
+model Structure {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  branches  Branch[]
+
+  createdAt DateTime @default(now())
+}
+
+model Branch {
+  id          Int       @id @default(autoincrement())
+  name        String
+  structureId Int
+  structure   Structure @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  members     Member[]
+
+  createdAt DateTime @default(now())
+}
+
+model Member {
+  id               String   @id @default(cuid())
+  membershipNumber String   @unique @default(cuid())
+  title            String?
+  firstName        String
+  lastName         String
+  gender           String?
+  identityNumber   String?
+  dateOfBirth      DateTime?
+  contactNumber    String?
+  countryName      String?
+  streetAddress    String?
+  city             String?
+  homeArea         String?
+  postalCode       String?
+  employment       String?
+  companyName      String?
+  avatarUrl        String?
+
+  branchId Int?
+  branch   Branch? @relation(fields: [branchId], references: [id])
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Donation {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  amount    Float
+  message   String?
+  currency  String   @default("SZL")
+
+  createdAt DateTime @default(now())
+}
+
+model Volunteer {
+  id      String  @id @default(cuid())
+  name    String
+  email   String
+  phone   String?
+  skills  String?
+  message String?
+
+  createdAt DateTime @default(now())
+}
+
+model ContactMessage {
+  id      String @id @default(cuid())
+  name    String
+  email   String
+  subject String
+  message String
+
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String       @id @default(cuid())
+  userId    String?
+  user      User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type      ActivityType
+  action    String       // human-readable string e.g. "signed up as a new member"
+  metadata  Json?        // optional extra data (amount donated, post title, etc.)
+  createdAt DateTime     @default(now())
+
+  @@index([createdAt(sort: Desc)])
+  @@index([userId])
+}
+
+enum ActivityType {
+  MEMBER
+  PROFILE
+  DONATION
+  POST
+}

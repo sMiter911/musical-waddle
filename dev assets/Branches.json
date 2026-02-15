@@ -1,0 +1,282 @@
+[
+  {
+    "id": 10,
+    "branch": "Siphocosini",
+    "branch_structure": 2
+  },
+  {
+    "id": 11,
+    "branch": "Motjane",
+    "branch_structure": 2
+  },
+  {
+    "id": 12,
+    "branch": "Makholokholo",
+    "branch_structure": 2
+  },
+  {
+    "id": 13,
+    "branch": "Nkaba",
+    "branch_structure": 2
+  },
+  {
+    "id": 14,
+    "branch": "Piggs Peak",
+    "branch_structure": 2
+  },
+  {
+    "id": 15,
+    "branch": "Ndzingeni",
+    "branch_structure": 2
+  },
+  {
+    "id": 16,
+    "branch": "Mhlangatane",
+    "branch_structure": 2
+  },
+  {
+    "id": 17,
+    "branch": "Mayiwane",
+    "branch_structure": 2
+  },
+  {
+    "id": 18,
+    "branch": "Ntfonjeni",
+    "branch_structure": 2
+  },
+  {
+    "id": 19,
+    "branch": "Siteki",
+    "branch_structure": 3
+  },
+  {
+    "id": 20,
+    "branch": "Mpaka ",
+    "branch_structure": 3
+  },
+  {
+    "id": 21,
+    "branch": "Maphiveni",
+    "branch_structure": 3
+  },
+  {
+    "id": 22,
+    "branch": "Lomahasha",
+    "branch_structure": 3
+  },
+  {
+    "id": 23,
+    "branch": "Siphofaneni",
+    "branch_structure": 3
+  },
+  {
+    "id": 24,
+    "branch": "Mavelela",
+    "branch_structure": 3
+  },
+  {
+    "id": 25,
+    "branch": "Big Bend",
+    "branch_structure": 3
+  },
+  {
+    "id": 26,
+    "branch": "Lubulini",
+    "branch_structure": 3
+  },
+  {
+    "id": 27,
+    "branch": "Mpolonjeni",
+    "branch_structure": 3
+  },
+  {
+    "id": 28,
+    "branch": "Shewula",
+    "branch_structure": 3
+  },
+  {
+    "id": 29,
+    "branch": "Sthobela",
+    "branch_structure": 3
+  },
+  {
+    "id": 30,
+    "branch": "Sgcaweni",
+    "branch_structure": 3
+  },
+  {
+    "id": 31,
+    "branch": "Mahamba",
+    "branch_structure": 4
+  },
+  {
+    "id": 32,
+    "branch": "Bonginhlanhla",
+    "branch_structure": 4
+  },
+  {
+    "id": 33,
+    "branch": "Nhlangano",
+    "branch_structure": 4
+  },
+  {
+    "id": 34,
+    "branch": "Lavumisa",
+    "branch_structure": 4
+  },
+  {
+    "id": 35,
+    "branch": "Hlatsi",
+    "branch_structure": 4
+  },
+  {
+    "id": 36,
+    "branch": "Matsanjeni",
+    "branch_structure": 4
+  },
+  {
+    "id": 37,
+    "branch": "Hluti ",
+    "branch_structure": 4
+  },
+  {
+    "id": 38,
+    "branch": "Methula",
+    "branch_structure": 4
+  },
+  {
+    "id": 39,
+    "branch": "Ndunaythini",
+    "branch_structure": 4
+  },
+  {
+    "id": 40,
+    "branch": "Ekhukhanyeni",
+    "branch_structure": 5
+  },
+  {
+    "id": 41,
+    "branch": "Sihhohhweni",
+    "branch_structure": 5
+  },
+  {
+    "id": 42,
+    "branch": "Mafutseni",
+    "branch_structure": 5
+  },
+  {
+    "id": 43,
+    "branch": "Macetjeni",
+    "branch_structure": 5
+  },
+  {
+    "id": 44,
+    "branch": "Manzini North",
+    "branch_structure": 5
+  },
+  {
+    "id": 45,
+    "branch": "Manzini South",
+    "branch_structure": 5
+  },
+  {
+    "id": 46,
+    "branch": "Matsapha",
+    "branch_structure": 5
+  },
+  {
+    "id": 47,
+    "branch": "Mbekelweni",
+    "branch_structure": 5
+  },
+  {
+    "id": 48,
+    "branch": "Ludzeludze",
+    "branch_structure": 5
+  },
+  {
+    "id": 49,
+    "branch": "Ntondozi",
+    "branch_structure": 5
+  },
+  {
+    "id": 50,
+    "branch": "Mankayane",
+    "branch_structure": 5
+  },
+  {
+    "id": 51,
+    "branch": "Usuthu",
+    "branch_structure": 5
+  },
+  {
+    "id": 1,
+    "branch": "Pretoria",
+    "branch_structure": 1
+  },
+  {
+    "id": 2,
+    "branch": "Midrand",
+    "branch_structure": 1
+  },
+  {
+    "id": 3,
+    "branch": "Johannesburg",
+    "branch_structure": 1
+  },
+  {
+    "id": 4,
+    "branch": "East Rand",
+    "branch_structure": 1
+  },
+  {
+    "id": 5,
+    "branch": "Pietermaritzburg",
+    "branch_structure": 1
+  },
+  {
+    "id": 6,
+    "branch": "Durban",
+    "branch_structure": 1
+  },
+  {
+    "id": 7,
+    "branch": "Nelspruit",
+    "branch_structure": 1
+  },
+  {
+    "id": 8,
+    "branch": "Barberton",
+    "branch_structure": 1
+  },
+  {
+    "id": 9,
+    "branch": "Msunduza",
+    "branch_structure": 2
+  },
+  {
+    "id": 52,
+    "branch": "Pongola",
+    "branch_structure": 1
+  },
+  {
+    "id": 53,
+    "branch": "Piet Retief",
+    "branch_structure": 1
+  },
+  {
+    "id": 54,
+    "branch": "Maputo",
+    "branch_structure": 1
+  },
+  {
+    "id": 55,
+    "branch": "Witbank (Emalahleni)",
+    "branch_structure": 1
+  },
+  {
+    "id": 56,
+    "branch": "Western Europe",
+    "branch_structure": 1
+  }
+]
