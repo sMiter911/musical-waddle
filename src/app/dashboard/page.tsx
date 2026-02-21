@@ -22,15 +22,16 @@ interface MemberData {
   contactNumber: string;
   email: string;
   title: string;
+  avatarUrl: string;
 }
 
 // ─── PUDEMO Logo Component ────────────────────────────────────────────────────
 function PudemoLogo({ size = 32, className = "" }: { size?: number; className?: string }) {
   return (
-    <img 
-      src="/images/pudemo_logo.png" 
-      alt="PUDEMO" 
-      width={size} 
+    <img
+      src="/images/pudemo_logo.png"
+      alt="PUDEMO"
+      width={size}
       height={size}
       className={className}
       style={{ borderRadius: '50%' }}
@@ -77,14 +78,14 @@ function shiftHue(hex: string, deg: number): string {
   const p = 2 * l - q;
   const hue2rgb = (p: number, q: number, t: number) => {
     if (t < 0) t += 1; if (t > 1) t -= 1;
-    if (t < 1/6) return p + (q - p) * 6 * t;
-    if (t < 1/2) return q;
-    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
     return p;
   };
-  const nr = Math.round(hue2rgb(p, q, h + 1/3) * 255);
+  const nr = Math.round(hue2rgb(p, q, h + 1 / 3) * 255);
   const ng = Math.round(hue2rgb(p, q, h) * 255);
-  const nb = Math.round(hue2rgb(p, q, h - 1/3) * 255);
+  const nb = Math.round(hue2rgb(p, q, h - 1 / 3) * 255);
   return "#" + [nr, ng, nb].map(v => v.toString(16).padStart(2, "0")).join("");
 }
 
@@ -118,8 +119,12 @@ function MemberCard3D({ member, accent }: { member: MemberData | null; accent: s
 
   // Generate initials avatar when member loads
   useEffect(() => {
-    if (member && !avatarFile) {
-      setAvatarSrc(generateInitialsAvatar(member.name || "Member", accent));
+    if (member) {
+      if (member.avatarUrl) {
+        setAvatarSrc(member.avatarUrl);
+      } else if (!avatarFile) {
+        setAvatarSrc(generateInitialsAvatar(member.name || "Member", accent));
+      }
     }
   }, [member, accent, avatarFile]);
 
@@ -161,18 +166,18 @@ function MemberCard3D({ member, accent }: { member: MemberData | null; accent: s
   const handleDownload = () => {
     if (!cardRef.current) return;
     const card = cardRef.current;
-    
+
     // Store original styles
     const originalTransition = card.style.transition;
     const originalTransform = card.style.transform;
-    
+
     // Reset transforms and ensure proper rendering
     card.style.transition = "none";
     card.style.transform = "rotateX(0) rotateY(0)";
-    
+
     setTimeout(async () => {
       const { default: html2canvas } = await import("html2canvas");
-      
+
       try {
         const canvas = await html2canvas(card, {
           backgroundColor: "#ffffff",
@@ -186,7 +191,7 @@ function MemberCard3D({ member, accent }: { member: MemberData | null; accent: s
           x: 0,
           y: 0,
         });
-        
+
         const link = document.createElement("a");
         link.download = `${member?.membershipNumber || "pudemo-card"}.png`;
         link.href = canvas.toDataURL("image/png");
@@ -345,6 +350,7 @@ export default function DashboardPage() {
         contactNumber: profile.contactNumber || "",
         email: session?.user?.email || "",
         title: profile.title || "",
+        avatarUrl: profile.avatarUrl || "",
       });
     } else {
       setMember({
@@ -356,6 +362,7 @@ export default function DashboardPage() {
         branch: "", structure: "", contactNumber: "",
         email: session?.user?.email || "",
         title: "",
+        avatarUrl: session?.user?.image || "",
       });
     }
     setLoading(false);
@@ -945,160 +952,160 @@ export default function DashboardPage() {
 
       <div className="dash-root">
         <div className="dash-container">
-        {/* ── Header ── */}
-        <header className="dash-header">
-          <div className="dash-header-left">
-            <div className="dash-greeting">
-              {loading ? <Skeleton w={220} h={28} /> : (
-                <>
-                  Welcome, {member?.name?.split("  ") || "Member"}
-                  {member?.profileComplete === 100 && (
-                    <span className="dash-verified" title="Profile Complete">
-                      <CheckCircle2 size={14} strokeWidth={3} />
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
-            {loading ? <Skeleton w={160} h={14} /> : (
-              <div className="dash-member-id">
-                Member ID:&nbsp;
-                <span className="dash-member-id-tag">{member?.membershipNumber}</span>
+          {/* ── Header ── */}
+          <header className="dash-header">
+            <div className="dash-header-left">
+              <div className="dash-greeting">
+                {loading ? <Skeleton w={220} h={28} /> : (
+                  <>
+                    Welcome, {member?.name?.split(" ")[0] || "Member"}
+                    {member?.profileComplete === 100 && (
+                      <span className="dash-verified" title="Profile Complete">
+                        <CheckCircle2 size={14} strokeWidth={3} />
+                      </span>
+                    )}
+                  </>
+                )}
               </div>
-            )}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <Link href="/dashboard/profile" className="dash-edit-link">
-                <User size={12} /> Edit Profile
-              </Link>
-              {(session?.user as any)?.role === "admin" && (
-                <Link href="/admin" className="dash-edit-link">
-                  <Users size={12} /> Admin Dashboard
-                </Link>
-              )}
-            </div>
-          </div>
-        </header>
-
-        {/* ── Main layout ── */}
-        <div className="dash-layout">
-
-          {/* ── Left column ── */}
-          <div className="dash-main">
-
-            {/* Profile completion */}
-            {!loading && member && member.profileComplete < 100 && (
-              <div className="dash-card">
-                <div className="dash-card-body">
-                  <div className="profile-status-header">
-                    <span className="profile-status-title">Profile Status</span>
-                    <span className="profile-status-pct">{member.profileComplete}%</span>
-                  </div>
-                  <div className="progress-track">
-                    <div className="progress-fill" style={{ width: `${member.profileComplete}%` }} />
-                  </div>
-                  <div className="profile-alert">
-                    <AlertCircle size={18} style={{ color: "#d97706", marginTop: 2, flexShrink: 0 }} />
-                    <div className="profile-alert-text">
-                      <p className="profile-alert-title">Action Required: Complete your profile</p>
-                      <p className="profile-alert-body">
-                        Please provide your branch and contact details to access full member benefits.
-                      </p>
-                      <Link href="/dashboard/profile" className="profile-alert-link">Update Now →</Link>
-                    </div>
-                  </div>
+              {loading ? <Skeleton w={160} h={14} /> : (
+                <div className="dash-member-id">
+                  Member ID:&nbsp;
+                  <span className="dash-member-id-tag">{member?.membershipNumber}</span>
                 </div>
-              </div>
-            )}
-
-            {/* Member details panel */}
-            <div className="dash-card">
-              <div className="member-info-card">
-                <div className="member-info-label">Your Details</div>
-                {loading ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} h={14} />)}
-                  </div>
-                ) : (
-                  <div className="member-info-rows">
-                    {[
-                      { key: "Full Name", val: member?.name },
-                      { key: "Branch", val: member?.branch },
-                      { key: "Region", val: member?.structure },
-                      { key: "Contact", val: member?.contactNumber },
-                      { key: "Email", val: member?.email },
-                      { key: "Member Since", val: member?.joinedDate },
-                    ].map(({ key, val }) => (
-                      <div key={key} className="member-info-row">
-                        <span className="member-info-key">{key}</span>
-                        {val
-                          ? <span className="member-info-val">{val}</span>
-                          : <span className="member-info-empty">Not set</span>
-                        }
-                      </div>
-                    ))}
-                  </div>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <Link href="/dashboard/profile" className="dash-edit-link">
+                  <User size={12} /> Edit Profile
+                </Link>
+                {(session?.user as any)?.role === "admin" && (
+                  <Link href="/admin" className="dash-edit-link">
+                    <Users size={12} /> Admin Dashboard
+                  </Link>
                 )}
               </div>
             </div>
+          </header>
 
-            {/* Quick actions */}
-            <div className="quick-actions">
-              <a href="#" className="quick-action-card">
-                <div className="quick-action-icon"><ClipboardList size={22} /></div>
-                <div className="quick-action-title">Member Resources</div>
-                <div className="quick-action-desc">Access templates, policy briefs, and organizing guides.</div>
-              </a>
-              <a href="#" className="quick-action-card">
-                <div className="quick-action-icon"><Users size={22} /></div>
-                <div className="quick-action-title">Branch Updates</div>
-                <div className="quick-action-desc">See what's happening in your regional structure.</div>
-              </a>
-            </div>
-          </div>
+          {/* ── Main layout ── */}
+          <div className="dash-layout">
 
-          {/* ── Right sidebar ── */}
-          <div className="dash-sidebar">
+            {/* ── Left column ── */}
+            <div className="dash-main">
 
-            {/* 3D Member Card */}
-            <div className="card3d-section">
-              <div className="card3d-section-header">
-                <span className="card3d-section-title">Your Member Card</span>
-                <div className="card3d-accent-picker">
-                  <span className="card3d-accent-label">Colour</span>
-                  <input
-                    type="color" className="card3d-color-input"
-                    value={cardAccent}
-                    onChange={(e) => setCardAccent(e.target.value)}
-                    title="Card accent colour"
-                  />
+              {/* Profile completion */}
+              {!loading && member && member.profileComplete < 100 && (
+                <div className="dash-card">
+                  <div className="dash-card-body">
+                    <div className="profile-status-header">
+                      <span className="profile-status-title">Profile Status</span>
+                      <span className="profile-status-pct">{member.profileComplete}%</span>
+                    </div>
+                    <div className="progress-track">
+                      <div className="progress-fill" style={{ width: `${member.profileComplete}%` }} />
+                    </div>
+                    <div className="profile-alert">
+                      <AlertCircle size={18} style={{ color: "#d97706", marginTop: 2, flexShrink: 0 }} />
+                      <div className="profile-alert-text">
+                        <p className="profile-alert-title">Action Required: Complete your profile</p>
+                        <p className="profile-alert-body">
+                          Please provide your branch and contact details to access full member benefits.
+                        </p>
+                        <Link href="/dashboard/profile" className="profile-alert-link">Update Now →</Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Member details panel */}
+              <div className="dash-card">
+                <div className="member-info-card">
+                  <div className="member-info-label">Your Details</div>
+                  {loading ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} h={14} />)}
+                    </div>
+                  ) : (
+                    <div className="member-info-rows">
+                      {[
+                        { key: "Full Name", val: member?.name },
+                        { key: "Branch", val: member?.branch },
+                        { key: "Region", val: member?.structure },
+                        { key: "Contact", val: member?.contactNumber },
+                        { key: "Email", val: member?.email },
+                        { key: "Member Since", val: member?.joinedDate },
+                      ].map(({ key, val }) => (
+                        <div key={key} className="member-info-row">
+                          <span className="member-info-key">{key}</span>
+                          {val
+                            ? <span className="member-info-val">{val}</span>
+                            : <span className="member-info-empty">Not set</span>
+                          }
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-              <MemberCard3D member={member} accent={cardAccent} />
-            </div>
 
-            {/* Membership status */}
-            <div className="membership-block">
-              <div className="membership-block-title">
-                <CheckCircle2 size={16} style={{ color: "#2ecc71" }} />
-                Active Membership
+              {/* Quick actions */}
+              <div className="quick-actions">
+                <a href="#" className="quick-action-card">
+                  <div className="quick-action-icon"><ClipboardList size={22} /></div>
+                  <div className="quick-action-title">Member Resources</div>
+                  <div className="quick-action-desc">Access templates, policy briefs, and organizing guides.</div>
+                </a>
+                <a href="#" className="quick-action-card">
+                  <div className="quick-action-icon"><Users size={22} /></div>
+                  <div className="quick-action-title">Branch Updates</div>
+                  <div className="quick-action-desc">See what's happening in your regional structure.</div>
+                </a>
               </div>
-              <p className="membership-block-body">
-                Your membership is currently active. Next renewal: <strong>Jan 2027</strong>.
-              </p>
-              <button className="membership-renew-btn">Renew Now</button>
             </div>
 
-            {/* Help */}
-            <div className="help-block">
-              <div className="help-block-title">Need Help?</div>
-              <p className="help-block-body">
-                Contact our support branch for technical or membership issues.
-              </p>
-              <Link href="/contact" className="help-link">Message Secretariat →</Link>
-            </div>
+            {/* ── Right sidebar ── */}
+            <div className="dash-sidebar">
 
+              {/* 3D Member Card */}
+              <div className="card3d-section">
+                <div className="card3d-section-header">
+                  <span className="card3d-section-title">Your Member Card</span>
+                  <div className="card3d-accent-picker">
+                    <span className="card3d-accent-label">Colour</span>
+                    <input
+                      type="color" className="card3d-color-input"
+                      value={cardAccent}
+                      onChange={(e) => setCardAccent(e.target.value)}
+                      title="Card accent colour"
+                    />
+                  </div>
+                </div>
+                <MemberCard3D member={member} accent={cardAccent} />
+              </div>
+
+              {/* Membership status */}
+              <div className="membership-block">
+                <div className="membership-block-title">
+                  <CheckCircle2 size={16} style={{ color: "#2ecc71" }} />
+                  Active Membership
+                </div>
+                <p className="membership-block-body">
+                  Your membership is currently active. Next renewal: <strong>Jan 2027</strong>.
+                </p>
+                <button className="membership-renew-btn">Renew Now</button>
+              </div>
+
+              {/* Help */}
+              <div className="help-block">
+                <div className="help-block-title">Need Help?</div>
+                <p className="help-block-body">
+                  Contact our support branch for technical or membership issues.
+                </p>
+                <Link href="/contact" className="help-link">Message Secretariat →</Link>
+              </div>
+
+            </div>
           </div>
-        </div>
         </div>
       </div>
     </>

@@ -69,6 +69,7 @@ export async function updateProfile(formData: any) {
         postalCode: formData.postalCode,
         employment: formData.employment,
         companyName: formData.companyName,
+        avatarUrl: formData.avatarUrl,
         branchId: branchId,
     };
 
@@ -119,6 +120,9 @@ export async function getMemberProfile() {
     const member = await prisma.member.findUnique({
         where: { userId: session.user.id },
         include: {
+            user: {
+                select: { image: true, name: true }
+            },
             branch: {
                 include: {
                     structure: true
@@ -127,12 +131,40 @@ export async function getMemberProfile() {
         }
     });
 
-    if (!member) return null;
+    const completion = member ? await calculateCompletion(member) : 0;
 
-    const completion = await calculateCompletion(member);
+    if (!member) {
+        return {
+            id: "",
+            userId: session.user.id,
+            membershipNumber: "Pending",
+            title: "",
+            firstName: session.user.name?.split(" ")[0] || "User",
+            lastName: session.user.name?.split(" ").slice(1).join(" ") || "",
+            gender: "",
+            identityNumber: "",
+            dateOfBirth: null,
+            contactNumber: "",
+            countryName: "Eswatini",
+            streetAddress: "",
+            city: "",
+            homeArea: "",
+            postalCode: "",
+            employment: "No",
+            companyName: "",
+            avatarUrl: session.user.image, // Fallback to social image
+            completion: 0,
+            structure: "",
+            branchName: "",
+            user: { image: session.user.image, name: session.user.name },
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+    }
 
     return {
         ...member,
+        avatarUrl: member.avatarUrl || member.user.image, // Fallback to social image
         completion,
         structure: member.branch?.structure?.name || "",
         branchName: member.branch?.name || ""

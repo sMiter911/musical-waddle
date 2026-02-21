@@ -26,12 +26,6 @@ export default function RegisterPage() {
         },
         {
           onSuccess: async () => {
-            // Log the signup activity
-            try {
-              await fetch("/api/auth/log-signup", { method: "POST" });
-            } catch (err) {
-              console.error("Failed to log signup:", err);
-            }
             window.location.href = "/dashboard";
           },
           onError: (ctx) => {
@@ -83,10 +77,10 @@ export default function RegisterPage() {
         >
           <div
             style={{
-              display: "inline-flex",
+              display: "flex",
               width: "48px",
               height: "48px",
-              background: "rgba(0,0,0,0.1)",
+              background: "rgba(255,255,255,0.2)",
               borderRadius: "9999px",
               alignItems: "center",
               justifyContent: "center",
@@ -206,22 +200,22 @@ export default function RegisterPage() {
                 padding: "clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.5rem)",
                 border: "1px solid #1877F2",
                 borderRadius: "var(--radius-lg)",
-                background: "#007BFF",
+                background: "#1877F2",
                 color: "#fff",
                 cursor: "pointer",
                 fontWeight: "600",
                 fontSize: "clamp(0.875rem, 1.5vw, 0.938rem)",
                 transition: "all var(--transition)",
-                boxShadow: "0 2px 8px rgba(24, 119, 242, 0.2)",
+                boxShadow: "0 2px 8px rgba(24, 119, 242, 0.15)",
               }}
               className="hover:shadow-md"
               onMouseEnter={(e) =>
-                (e.currentTarget.style.boxShadow =
-                  "0 4px 12px rgba(24, 119, 242, 0.3)")
+              (e.currentTarget.style.boxShadow =
+                "0 4px 12px rgba(24, 119, 242, 0.25)")
               }
               onMouseLeave={(e) =>
-                (e.currentTarget.style.boxShadow =
-                  "0 2px 8px rgba(24, 119, 242, 0.2)")
+              (e.currentTarget.style.boxShadow =
+                "0 2px 8px rgba(24, 119, 242, 0.15)")
               }
             >
               <svg

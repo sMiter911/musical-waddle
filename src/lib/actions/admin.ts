@@ -34,6 +34,7 @@ export async function getAllMembers() {
 
   return members.map((member) => ({
     id: member.membershipNumber,
+    userId: member.userId,
     name: `${member.firstName} ${member.lastName}`.trim() || "Unknown",
     email: member.user.email,
     region: member.branch?.structure?.name || "Not assigned",
@@ -157,21 +158,114 @@ function determineStatus(member: any): "Active" | "Pending" | "Inactive" {
   return "Inactive";
 }
 
+export async function getMemberProfileById(userId: string) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session || !session.user || (session.user as any).role !== "admin") {
+    throw new Error("Unauthorized");
+  }
+
+  const member = await prisma.member.findUnique({
+    where: { userId },
+    include: {
+      user: {
+        select: { image: true, email: true, name: true }
+      },
+      branch: {
+        include: {
+          structure: true
+        }
+      }
+    }
+  });
+
+  if (!member) return null;
+
+  const completion = await calculateCompletion(member);
+
+  return {
+    ...member,
+    avatarUrl: member.avatarUrl || member.user.image,
+    completion,
+    structure: member.branch?.structure?.name || "",
+    branchName: member.branch?.name || ""
+  };
+}
+
+async function calculateCompletion(member: any) {
+  const completionFields = [
+    "title",
+    "firstName",
+    "lastName",
+    "gender",
+    "identityNumber",
+    "dateOfBirth",
+    "contactNumber",
+    "countryName",
+    "streetAddress",
+    "city",
+    "homeArea",
+    "employment",
+  ];
+
+  let filledFields = 0;
+  completionFields.forEach((field) => {
+    if (member[field as keyof typeof member]) filledFields++;
+  });
+  if (member.branchId) filledFields++;
+
+  return Math.round((filledFields / (completionFields.length + 1)) * 100);
+}
+
+export async function getMemberActivityById(userId: string, limit = 20) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session || !session.user || (session.user as any).role !== "admin") {
+    throw new Error("Unauthorized");
+  }
+
+  const logs = await prisma.activityLog.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+
+  return logs.map((log) => ({
+    id: log.id,
+    action: log.action,
+    type: log.type.toLowerCase(),
+    time: formatRelativeTime(log.createdAt),
+    fullDate: log.createdAt,
+  }));
+}
+
+function formatRelativeTime(date: Date): string {
+  const diff = Date.now() - date.getTime();
+  const mins = Math.floor(diff / 60_000);
+  const hours = Math.floor(diff / 3_600_000);
+  const days = Math.floor(diff / 86_400_000);
+
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
 function formatDate(date: Date): string {
   const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
   const d = new Date(date);
   return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
+

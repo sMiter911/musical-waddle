@@ -34,7 +34,7 @@ export async function logActivity(input: LogActivityInput): Promise<void> {
       userId: input.userId,
       type: input.type,
       action: input.action,
-      metadata: input.metadata,
+      metadata: input.metadata as any,
     },
   });
 

@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "@/lib/auth-client";
 import { updateProfile, getMemberProfile } from "@/lib/actions/profile";
+import styles from "@/styles/profile.module.css";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface Structure {
@@ -28,6 +29,7 @@ interface FormState {
   postalCode: string;
   employment: string;
   companyName: string;
+  avatarUrl?: string | null;
 }
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
@@ -56,6 +58,7 @@ const EMPTY_FORM: FormState = {
   postalCode: "",
   employment: "No",
   companyName: "",
+  avatarUrl: null,
 };
 
 // ─── Small helper components ───────────────────────────────────────────────────
@@ -155,7 +158,7 @@ export default function MemberProfilePage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error" | ""; text: string }>({ type: "", text: "" });
   const [activeSection, setActiveSection] = useState("account");
-  
+
   // Account update state
   const [accountName, setAccountName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -191,6 +194,10 @@ export default function MemberProfilePage() {
         const selected = STRUCTURES.find((s) => s.structure === profile.structure);
         setStructureBranches(selected?.branches ?? []);
       }
+      if (profile.avatarUrl) {
+        setAvatarUrl(profile.avatarUrl);
+        setForm(prev => ({ ...prev, avatarUrl: profile.avatarUrl }));
+      }
     }
     // Set account name from session
     if (session?.user?.name) {
@@ -206,8 +213,8 @@ export default function MemberProfilePage() {
   // ── Helpers ──
   const set =
     (field: keyof FormState) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-      setForm((prev) => ({ ...prev, [field]: e.target.value }));
+      (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+        setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
   const changeStructure = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -234,7 +241,7 @@ export default function MemberProfilePage() {
     setSaving(true);
     setMessage({ type: "", text: "" });
     try {
-      const result = await updateProfile(form);
+      const result = await updateProfile({ ...form, avatarUrl });
       if (result.success) {
         setMessage({ type: "success", text: "Profile updated successfully!" });
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -259,7 +266,7 @@ export default function MemberProfilePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: accountName }),
         });
-        
+
         if (!response.ok) {
           throw new Error("Failed to update name");
         }
@@ -298,7 +305,7 @@ export default function MemberProfilePage() {
 
       setMessage({ type: "success", text: "Account updated successfully!" });
       window.scrollTo({ top: 0, behavior: "smooth" });
-      
+
       // Reload page to refresh session
       setTimeout(() => window.location.reload(), 1500);
     } catch (error: any) {
@@ -763,7 +770,14 @@ export default function MemberProfilePage() {
                       id="avatar-file" type="file" accept="image/*" className="sr-only"
                       onChange={(e) => {
                         const f = e.target.files?.[0];
-                        if (f) setAvatarUrl(URL.createObjectURL(f));
+                        if (f) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            const base64String = reader.result as string;
+                            setAvatarUrl(base64String);
+                          };
+                          reader.readAsDataURL(f);
+                        }
                       }}
                     />
                   </label>

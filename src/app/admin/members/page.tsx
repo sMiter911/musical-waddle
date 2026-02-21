@@ -1,16 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
   Search, Download, UserPlus,
   Mail, MoreVertical, ChevronUp, ChevronDown,
-  CheckCircle2, Clock, XCircle, Users,
+  CheckCircle2, Clock, XCircle, Users, Eye,
 } from "lucide-react";
 import { getAllMembers } from "@/lib/actions/admin";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface Member {
   id: string;
+  userId: string;
   name: string;
   email: string;
   region: string;
@@ -21,9 +23,9 @@ interface Member {
 }
 
 const STATUS_CONFIG = {
-  Active:   { icon: CheckCircle2, color: "#1a6640", bg: "rgba(26,102,64,0.09)",  border: "rgba(26,102,64,0.2)"  },
-  Pending:  { icon: Clock,        color: "#b45309", bg: "rgba(180,83,9,0.09)",   border: "rgba(180,83,9,0.2)"   },
-  Inactive: { icon: XCircle,      color: "#6b6b6b", bg: "rgba(107,107,107,0.08)",border: "rgba(107,107,107,0.2)"},
+  Active: { icon: CheckCircle2, color: "#1a6640", bg: "rgba(26,102,64,0.09)", border: "rgba(26,102,64,0.2)" },
+  Pending: { icon: Clock, color: "#b45309", bg: "rgba(180,83,9,0.09)", border: "rgba(180,83,9,0.2)" },
+  Inactive: { icon: XCircle, color: "#6b6b6b", bg: "rgba(107,107,107,0.08)", border: "rgba(107,107,107,0.2)" },
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -32,11 +34,11 @@ function getInitials(name: string) {
 }
 
 const AVATAR_COLORS = [
-  ["#1a6640","rgba(26,102,64,0.12)"],
-  ["#1e40af","rgba(30,64,175,0.1)"],
-  ["#b45309","rgba(180,83,9,0.1)"],
-  ["#be123c","rgba(190,18,60,0.1)"],
-  ["#5b21b6","rgba(91,33,182,0.1)"],
+  ["#1a6640", "rgba(26,102,64,0.12)"],
+  ["#1e40af", "rgba(30,64,175,0.1)"],
+  ["#b45309", "rgba(180,83,9,0.1)"],
+  ["#be123c", "rgba(190,18,60,0.1)"],
+  ["#5b21b6", "rgba(91,33,182,0.1)"],
 ];
 function avatarColor(id: string): [string, string] {
   const idx = parseInt(id.replace(/\D/g, "")) % AVATAR_COLORS.length;
@@ -47,11 +49,11 @@ function avatarColor(id: string): [string, string] {
 export default function AdminMembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch]     = useState("");
-  const [region, setRegion]     = useState("All Regions");
+  const [search, setSearch] = useState("");
+  const [region, setRegion] = useState("All Regions");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [sortField, setSortField] = useState<keyof Member>("id");
-  const [sortAsc, setSortAsc]   = useState(true);
+  const [sortAsc, setSortAsc] = useState(true);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   useEffect(() => {
@@ -90,9 +92,9 @@ export default function AdminMembersPage() {
     });
 
   const counts = {
-    total:    members.length,
-    active:   members.filter(m => m.status === "Active").length,
-    pending:  members.filter(m => m.status === "Pending").length,
+    total: members.length,
+    active: members.filter(m => m.status === "Active").length,
+    pending: members.filter(m => m.status === "Pending").length,
     inactive: members.filter(m => m.status === "Inactive").length,
   };
 
@@ -504,10 +506,10 @@ export default function AdminMembersPage() {
         {/* ── Stats strip ── */}
         <div className="mem-stats">
           {[
-            { label: "Total Members",    val: counts.total                          },
-            { label: "Active",           val: counts.active,   accent: "#1a6640"    },
-            { label: "Pending Review",   val: counts.pending,  accent: "#b45309"    },
-            { label: "Inactive",         val: counts.inactive, accent: "#6b6b6b"    },
+            { label: "Total Members", val: counts.total },
+            { label: "Active", val: counts.active, accent: "#1a6640" },
+            { label: "Pending Review", val: counts.pending, accent: "#b45309" },
+            { label: "Inactive", val: counts.inactive, accent: "#6b6b6b" },
           ].map(({ label, val, accent }) => (
             <div key={label} className="mem-stat">
               <span className="mem-stat-label">{label}</span>
@@ -545,9 +547,9 @@ export default function AdminMembersPage() {
                 const isActive = statusFilter === s;
                 const cls =
                   !isActive ? "" :
-                  s === "Active"   ? "active-green" :
-                  s === "Pending"  ? "active-amber" :
-                  s === "Inactive" ? "active-gray"  : "active";
+                    s === "Active" ? "active-green" :
+                      s === "Pending" ? "active-amber" :
+                        s === "Inactive" ? "active-gray" : "active";
                 return (
                   <button
                     key={s}
@@ -569,133 +571,135 @@ export default function AdminMembersPage() {
                 <div className="mem-empty-title">Loading members...</div>
               </div>
             ) : (
-            <table className="mem-table">
-              <thead>
-                <tr>
-                  {([
-                    { key: "id",     label: "Member ID" },
-                    { key: "name",   label: "Name"      },
-                    { key: "region", label: "Region"    },
-                    { key: "joined", label: "Joined"    },
-                    { key: "status", label: "Status"    },
-                  ] as { key: keyof Member; label: string }[]).map(col => (
-                    <th
-                      key={col.key}
-                      className="mem-th"
-                      onClick={() => toggleSort(col.key)}
-                    >
-                      <span className="mem-th-inner">
-                        {col.label}
-                        <SortIcon field={col.key} />
-                      </span>
-                    </th>
-                  ))}
-                  <th className="mem-th mem-th-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
+              <table className="mem-table">
+                <thead>
                   <tr>
-                    <td colSpan={6}>
-                      <div className="mem-empty">
-                        <div className="mem-empty-icon"><Users size={22} /></div>
-                        <div className="mem-empty-title">No members found</div>
-                        <div className="mem-empty-sub">Try adjusting your search or filters</div>
-                      </div>
-                    </td>
+                    {([
+                      { key: "id", label: "Member ID" },
+                      { key: "name", label: "Name" },
+                      { key: "region", label: "Region" },
+                      { key: "joined", label: "Joined" },
+                      { key: "status", label: "Status" },
+                    ] as { key: keyof Member; label: string }[]).map(col => (
+                      <th
+                        key={col.key}
+                        className="mem-th"
+                        onClick={() => toggleSort(col.key)}
+                      >
+                        <span className="mem-th-inner">
+                          {col.label}
+                          <SortIcon field={col.key} />
+                        </span>
+                      </th>
+                    ))}
+                    <th className="mem-th mem-th-right">Actions</th>
                   </tr>
-                ) : filtered.map((member) => {
-                  const { icon: StatusIcon, color, bg, border } = STATUS_CONFIG[member.status];
-                  const [avatarText, avatarBg] = avatarColor(member.id);
-                  const isOpen = openMenu === member.id;
-
-                  return (
-                    <tr key={member.id} className="mem-tr">
-                      {/* ID */}
-                      <td className="mem-td">
-                        <span className="mem-id">{member.id}</span>
-                      </td>
-
-                      {/* Name */}
-                      <td className="mem-td">
-                        <div className="mem-name-cell">
-                          <div
-                            className="mem-avatar"
-                            style={{ background: avatarBg, color: avatarText }}
-                          >
-                            {getInitials(member.name)}
-                          </div>
-                          <div>
-                            <div className="mem-name">{member.name}</div>
-                            <div className="mem-email">
-                              <Mail size={11} />
-                              {member.email}
-                            </div>
-                          </div>
+                </thead>
+                <tbody>
+                  {filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={6}>
+                        <div className="mem-empty">
+                          <div className="mem-empty-icon"><Users size={22} /></div>
+                          <div className="mem-empty-title">No members found</div>
+                          <div className="mem-empty-sub">Try adjusting your search or filters</div>
                         </div>
                       </td>
-
-                      {/* Region */}
-                      <td className="mem-td">
-                        <span className="mem-region">{member.region}</span>
-                      </td>
-
-                      {/* Joined */}
-                      <td className="mem-td">
-                        <span className="mem-date">{member.joined}</span>
-                      </td>
-
-                      {/* Status */}
-                      <td className="mem-td">
-                        <span
-                          className="mem-badge"
-                          style={{ color, background: bg, borderColor: border }}
-                        >
-                          <StatusIcon size={11} />
-                          {member.status}
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="mem-td" style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
-                        <button
-                          className={`mem-action-btn ${isOpen ? "open" : ""}`}
-                          onClick={() => setOpenMenu(isOpen ? null : member.id)}
-                          aria-label="Member actions"
-                        >
-                          <MoreVertical size={16} />
-                        </button>
-
-                        {isOpen && (
-                          <div className="mem-dropdown">
-                            <button className="mem-dropdown-item">View Profile</button>
-                            <button className="mem-dropdown-item">Edit Details</button>
-                            <button className="mem-dropdown-item">
-                              <Mail size={14} /> Send Email
-                            </button>
-                            <div className="mem-dropdown-divider" />
-                            <button className="mem-dropdown-item danger">Deactivate</button>
-                          </div>
-                        )}
-                      </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ) : filtered.map((member) => {
+                    const { icon: StatusIcon, color, bg, border } = STATUS_CONFIG[member.status];
+                    const [avatarText, avatarBg] = avatarColor(member.id);
+                    const isOpen = openMenu === member.id;
+
+                    return (
+                      <tr key={member.id} className="mem-tr">
+                        {/* ID */}
+                        <td className="mem-td">
+                          <span className="mem-id">{member.id}</span>
+                        </td>
+
+                        {/* Name */}
+                        <td className="mem-td">
+                          <div className="mem-name-cell">
+                            <div
+                              className="mem-avatar"
+                              style={{ background: avatarBg, color: avatarText }}
+                            >
+                              {getInitials(member.name)}
+                            </div>
+                            <div>
+                              <div className="mem-name">{member.name}</div>
+                              <div className="mem-email">
+                                <Mail size={11} />
+                                {member.email}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Region */}
+                        <td className="mem-td">
+                          <span className="mem-region">{member.region}</span>
+                        </td>
+
+                        {/* Joined */}
+                        <td className="mem-td">
+                          <span className="mem-date">{member.joined}</span>
+                        </td>
+
+                        {/* Status */}
+                        <td className="mem-td">
+                          <span
+                            className="mem-badge"
+                            style={{ color, background: bg, borderColor: border }}
+                          >
+                            <StatusIcon size={11} />
+                            {member.status}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="mem-td" style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
+                          <button
+                            className={`mem-action-btn ${isOpen ? "open" : ""}`}
+                            onClick={() => setOpenMenu(isOpen ? null : member.id)}
+                            aria-label="Member actions"
+                          >
+                            <MoreVertical size={16} />
+                          </button>
+
+                          {isOpen && (
+                            <div className="mem-dropdown">
+                              <Link href={`/admin/members/${member.userId}`} className="mem-dropdown-item">
+                                <Eye size={14} /> View Profile
+                              </Link>
+                              <button className="mem-dropdown-item">Edit Details</button>
+                              <button className="mem-dropdown-item">
+                                <Mail size={14} /> Send Email
+                              </button>
+                              <div className="mem-dropdown-divider" />
+                              <button className="mem-dropdown-item danger">Deactivate</button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
           </div>
 
           {/* Footer */}
           {!loading && (
-          <div className="mem-table-footer">
-            <span>
-              Showing <strong>{filtered.length}</strong> of <strong>{members.length}</strong> members
-            </span>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11 }}>
-              {counts.active} active · {counts.pending} pending · {counts.inactive} inactive
-            </span>
-          </div>
+            <div className="mem-table-footer">
+              <span>
+                Showing <strong>{filtered.length}</strong> of <strong>{members.length}</strong> members
+              </span>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11 }}>
+                {counts.active} active · {counts.pending} pending · {counts.inactive} inactive
+              </span>
+            </div>
           )}
         </div>
 
