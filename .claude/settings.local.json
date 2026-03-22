@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /d/Development/Projects/pudemo-rebuild -maxdepth 2 -name tailwind* -o -name next.config*)",
+      "Bash(npx prisma:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(find D:DevelopmentProjectspudemo-rebuild -type f -name prisma.config.* -o -name prisma.config.ts)",
+      "Bash(node -e \"const lr = require\\(''lucide-react''\\); console.log\\(''Reply:'', !!lr.Reply, ''MessageSquare:'', !!lr.MessageSquare, ''Bell:'', !!lr.Bell\\);\")"
+    ]
+  }
+}

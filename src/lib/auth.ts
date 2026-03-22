@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./db";
 import { logActivity } from "./actions/activity";
+import { generateMemberId } from "./member-id";
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -19,9 +20,11 @@ export const auth = betterAuth({
             create: {
                 after: async (user) => {
                     // Create Member record immediately for new users
+                    const membershipNumber = await generateMemberId();
                     await prisma.member.create({
                         data: {
                             userId: user.id,
+                            membershipNumber,
                             firstName: user.name.split(" ")[0] || "User",
                             lastName: user.name.split(" ").slice(1).join(" ") || "",
                             avatarUrl: user.image, // Sync social image to avatar

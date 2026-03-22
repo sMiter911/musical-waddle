@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Mail, Phone, MapPin, LogOut } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth-client";
+import { useState, useEffect } from "react";
 
 const quickLinks = [
   { href: "/about", label: "About Us" },
@@ -14,6 +15,8 @@ const quickLinks = [
 
 export default function Footer() {
   const { data: session } = useSession();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const handleSignOut = async () => {
     await signOut({
@@ -112,7 +115,7 @@ export default function Footer() {
               </li>
             ))}
             <li>
-              {session ? (
+              {mounted && session ? (
                 <button
                   onClick={handleSignOut}
                   style={{
