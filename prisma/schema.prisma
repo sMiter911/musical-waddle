@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ─── BetterAuth Models ────────────────────────────────────────────
@@ -23,6 +22,11 @@ model User {
   accounts      Account[]
   member        Member?
   activityLogs  ActivityLog[]
+  posts         Post[]
+  comments      Comment[]
+  notifications Notification[]
+  branchUpdates BranchUpdate[]
+  resources     Resource[]
 }
 
 model Session {
@@ -84,6 +88,7 @@ model Branch {
   structureId Int
   structure   Structure @relation(fields: [structureId], references: [id], onDelete: Cascade)
   members     Member[]
+  branchUpdates BranchUpdate[]
 
   createdAt DateTime @default(now())
 }
@@ -106,6 +111,7 @@ model Member {
   employment       String?
   companyName      String?
   avatarUrl        String?
+  deletedAt        DateTime?
 
   branchId Int?
   branch   Branch? @relation(fields: [branchId], references: [id])
@@ -167,4 +173,119 @@ enum ActivityType {
   PROFILE
   DONATION
   POST
+  BRANCH
+  RESOURCE
+}
+
+// ─── Blog Models ───────────────────────────────────────────────────────────────
+
+enum PostCategory {
+  NEWS
+  STATEMENT
+  ANALYSIS
+  ANNOUNCEMENT
+  INTERVIEW
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Post {
+  id          String       @id @default(cuid())
+  title       String
+  slug        String       @unique
+  excerpt     String
+  content     String
+  coverImage  String?
+  category    PostCategory @default(NEWS)
+  tags        String[]     @default([])
+  status      PostStatus   @default(DRAFT)
+  publishedAt DateTime?
+
+  authorId String
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@index([slug])
+  @@index([category])
+}
+
+model Comment {
+  id       String  @id @default(cuid())
+  body     String
+  parentId String?
+
+  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([postId, createdAt(sort: Desc)])
+  @@index([parentId])
+}
+
+// ─── Notification Models ────────────────────────────────────────────────────────
+
+enum NotificationType {
+  COMMENT
+  REPLY
+  BRANCH_UPDATE
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  message   String
+  postSlug  String?
+  postTitle String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead, createdAt(sort: Desc)])
+}
+
+// ─── Branch Updates ─────────────────────────────────────────────────────────
+
+model BranchUpdate {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  branchId  Int
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([branchId, createdAt(sort: Desc)])
+}
+
+// ─── Resources ───────────────────────────────────────────────────────────────
+
+model Resource {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  url         String
+  category    String   @default("General")
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([createdAt(sort: Desc)])
 }

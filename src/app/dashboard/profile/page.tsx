@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "@/lib/auth-client";
-import { updateProfile, getMemberProfile } from "@/lib/actions/profile";
+import { updateProfile, getMemberProfile, deleteMyAccount } from "@/lib/actions/profile";
 import styles from "@/styles/profile.module.css";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -165,6 +165,23 @@ export default function MemberProfilePage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingAccount, setUpdatingAccount] = useState(false);
+
+  // Account deletion state
+  const [showDeleteZone, setShowDeleteZone] = useState(false);
+  const [deletePhrase, setDeletePhrase] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const DELETE_PHRASE = "DELETE MY ACCOUNT";
+
+  async function handleDeleteAccount() {
+    if (deletePhrase !== DELETE_PHRASE) return;
+    setDeleting(true);
+    try {
+      await deleteMyAccount();
+      await signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/"; } } });
+    } catch {
+      setDeleting(false);
+    }
+  }
 
   // ── Load profile ──
   const loadProfile = useCallback(async () => {
@@ -1109,6 +1126,89 @@ export default function MemberProfilePage() {
 
             </div>
           </form>
+
+          {/* ── Danger Zone ── */}
+          <div style={{
+            marginTop: "2.5rem",
+            padding: "22px 28px",
+            background: "rgba(190,18,60,0.04)",
+            border: "1.5px solid rgba(190,18,60,0.2)",
+            borderRadius: "12px",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#be123c", marginBottom: 3 }}>
+                  Danger Zone
+                </div>
+                <div style={{ fontSize: 13, color: "#6b6b6b", maxWidth: 480 }}>
+                  Permanently delete your account and all associated data. This action cannot be undone.
+                </div>
+              </div>
+              {!showDeleteZone && (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteZone(true)}
+                  style={{
+                    padding: "8px 18px", background: "transparent", color: "#be123c",
+                    border: "1.5px solid rgba(190,18,60,0.4)", borderRadius: 8,
+                    fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                    transition: "background 0.15s",
+                  }}
+                >
+                  Delete Account
+                </button>
+              )}
+            </div>
+
+            {showDeleteZone && (
+              <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(190,18,60,0.15)" }}>
+                <p style={{ fontSize: 13, color: "#3a3a3a", marginBottom: 14, lineHeight: 1.6 }}>
+                  This will permanently delete your PUDEMO membership, all your data, and revoke your access.
+                  To confirm, type <strong style={{ fontFamily: "monospace", color: "#be123c" }}>{DELETE_PHRASE}</strong> below.
+                </p>
+                <input
+                  type="text"
+                  value={deletePhrase}
+                  onChange={(e) => setDeletePhrase(e.target.value)}
+                  placeholder={`Type: ${DELETE_PHRASE}`}
+                  style={{
+                    width: "100%", maxWidth: 400, padding: "9px 12px",
+                    border: "1.5px solid rgba(190,18,60,0.35)", borderRadius: 8,
+                    fontFamily: "inherit", fontSize: 13, outline: "none", marginBottom: 14,
+                    background: "#fff", color: "#1a1a1a", boxSizing: "border-box",
+                  }}
+                />
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={() => { setShowDeleteZone(false); setDeletePhrase(""); }}
+                    style={{
+                      padding: "8px 16px", background: "#fff", color: "#4a4a4a",
+                      border: "1.5px solid #e5e3de", borderRadius: 8,
+                      fontFamily: "inherit", fontSize: 13, fontWeight: 600, cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteAccount}
+                    disabled={deletePhrase !== DELETE_PHRASE || deleting}
+                    style={{
+                      padding: "8px 18px",
+                      background: deletePhrase === DELETE_PHRASE ? "#be123c" : "rgba(190,18,60,0.3)",
+                      color: "#fff", border: "none", borderRadius: 8,
+                      fontFamily: "inherit", fontSize: 13, fontWeight: 700,
+                      cursor: deletePhrase === DELETE_PHRASE ? "pointer" : "not-allowed",
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    {deleting ? "Deleting…" : "Permanently Delete My Account"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>

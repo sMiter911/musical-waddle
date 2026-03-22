@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Users, FileText, Heart, Megaphone,
   ArrowUpRight, ArrowDownRight, ChevronRight,
   TrendingUp,
 } from "lucide-react";
-import { getMemberStats } from "@/lib/actions/admin";
+import { getMemberStats, getMembershipGrowth } from "@/lib/actions/admin";
+import { getPostStats } from "@/lib/actions/posts";
 import type { ActivityItem } from "@/lib/actions/activity";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -24,10 +26,9 @@ const activityDot: Record<ActivityItem["type"], string> = {
   profile:  "#1e40af",
   donation: "#be123c",
   post:     "#b45309",
+  branch:   "#7c3aed",
+  resource: "#065f46",
 };
-
-// ─── Sparkline placeholder (pure CSS bars) ────────────────────────────────────
-const sparkBars = [40, 65, 50, 80, 60, 90, 70, 100, 75, 88, 95, 100];
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({
@@ -39,12 +40,25 @@ export default function AdminDashboardPage() {
   });
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [publishedPosts, setPublishedPosts] = useState(0);
+  const [growth, setGrowth] = useState<{
+    labels: string[];
+    counts: number[];
+    maxCount: number;
+    growthPct: number;
+  } | null>(null);
 
   useEffect(() => {
     async function loadStats() {
       try {
-        const data = await getMemberStats();
-        setStats(data);
+        const [statsData, growthData, postStatsData] = await Promise.all([
+          getMemberStats(),
+          getMembershipGrowth(),
+          getPostStats(),
+        ]);
+        setStats(statsData);
+        setGrowth(growthData);
+        setPublishedPosts(postStatsData.publishedPosts);
       } catch (error) {
         console.error("Failed to load stats:", error);
       } finally {
@@ -69,7 +83,7 @@ export default function AdminDashboardPage() {
 
   const statCards: Stat[] = [
     { label: "Total Members",    value: loading ? "..." : stats.totalMembers.toString(), icon: Users,     trend: "+12%", accent: "rgba(26,102,64,0.08)",  accentDark: "#1a6640"  },
-    { label: "Blog Posts",       value: "0",    icon: FileText,  trend: "+0",   accent: "rgba(30,64,175,0.08)",  accentDark: "#1e40af"  },
+    { label: "Blog Posts",       value: loading ? "..." : publishedPosts.toString(), icon: FileText, trend: "+0", accent: "rgba(30,64,175,0.08)", accentDark: "#1e40af" },
     { label: "Donations",  value: loading ? "..." : stats.totalDonations.toString(),icon: Heart,     trend: "+8.4%",accent: "rgba(190,18,60,0.08)",  accentDark: "#be123c"  },
     { label: "New Volunteers",   value: loading ? "..." : stats.totalVolunteers.toString(),    icon: Megaphone, trend: "-5%",  accent: "rgba(180,83,9,0.08)",   accentDark: "#b45309"  },
   ];
@@ -484,23 +498,32 @@ export default function AdminDashboardPage() {
             <div className="adm-chart-header">
               <span className="adm-chart-title">Membership Growth</span>
               <div className="adm-chart-meta">
-                <TrendingUp size={14} /> +12% this year
+                <TrendingUp size={14} />
+                {loading || !growth
+                  ? "Loading..."
+                  : `${growth.growthPct >= 0 ? "+" : ""}${growth.growthPct}% this year`}
               </div>
             </div>
             <div className="adm-chart-body">
               <div className="adm-chart-bars">
-                {sparkBars.map((h, i) => (
-                  <div key={i} className="adm-chart-bar-wrap">
-                    <div
-                      className="adm-chart-bar"
-                      style={{ height: `${h}%` }}
-                      title={`${Math.round(h * 12.84)} members`}
-                    />
-                  </div>
-                ))}
+                {(growth?.counts ?? Array(12).fill(0)).map((count, i) => {
+                  const heightPct = growth
+                    ? Math.round((count / growth.maxCount) * 100)
+                    : 0;
+                  const label = growth?.labels[i] ?? "";
+                  return (
+                    <div key={i} className="adm-chart-bar-wrap">
+                      <div
+                        className="adm-chart-bar"
+                        style={{ height: `${heightPct}%` }}
+                        title={`${label}: ${count} new member${count !== 1 ? "s" : ""}`}
+                      />
+                    </div>
+                  );
+                })}
               </div>
               <div className="adm-chart-x">
-                {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map(m => (
+                {(growth?.labels ?? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]).map(m => (
                   <span key={m} style={{ fontSize: "9.5px", color: "#a0998e", fontFamily: "'JetBrains Mono', monospace" }}>
                     {m}
                   </span>
@@ -511,10 +534,6 @@ export default function AdminDashboardPage() {
               <div className="adm-chart-legend-item">
                 <div className="adm-chart-legend-dot" style={{ background: "#1a6640" }} />
                 New members
-              </div>
-              <div className="adm-chart-legend-item">
-                <div className="adm-chart-legend-dot" style={{ background: "#e5e3de" }} />
-                Churned
               </div>
             </div>
           </div>
@@ -553,9 +572,9 @@ export default function AdminDashboardPage() {
               )}
             </div>
             <div className="adm-activity-footer">
-              <button className="adm-activity-more">
+              <Link href="/admin/activity" className="adm-activity-more">
                 View all activity <ChevronRight size={14} />
-              </button>
+              </Link>
             </div>
           </div>
 

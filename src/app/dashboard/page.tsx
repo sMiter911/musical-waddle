@@ -1050,16 +1050,16 @@ export default function DashboardPage() {
 
               {/* Quick actions */}
               <div className="quick-actions">
-                <a href="#" className="quick-action-card">
+                <Link href="/dashboard/resources" className="quick-action-card">
                   <div className="quick-action-icon"><ClipboardList size={22} /></div>
                   <div className="quick-action-title">Member Resources</div>
                   <div className="quick-action-desc">Access templates, policy briefs, and organizing guides.</div>
-                </a>
-                <a href="#" className="quick-action-card">
+                </Link>
+                <Link href="/dashboard/branch-updates" className="quick-action-card">
                   <div className="quick-action-icon"><Users size={22} /></div>
                   <div className="quick-action-title">Branch Updates</div>
                   <div className="quick-action-desc">See what's happening in your regional structure.</div>
-                </a>
+                </Link>
               </div>
             </div>
 

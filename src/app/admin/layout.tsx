@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Users, Heart, Megaphone,
-  Settings, LogOut, ShieldCheck,
+  LayoutDashboard, Users, Heart, Megaphone, FileText,
+  Settings, LogOut, ShieldCheck, Bell, BookOpen, Activity,
 } from "lucide-react";
 import { signOut, useSession } from "@/lib/auth-client";
 
@@ -19,10 +19,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const sidebarLinks = [
-    { href: "/admin",            label: "Dashboard",  icon: LayoutDashboard },
-    { href: "/admin/members",    label: "Members",    icon: Users           },
-    { href: "/admin/donations",  label: "Donations",  icon: Heart           },
-    { href: "/admin/volunteers", label: "Volunteers", icon: Megaphone       },
+    { href: "/admin",                   label: "Dashboard",     icon: LayoutDashboard },
+    { href: "/admin/members",           label: "Members",       icon: Users           },
+    { href: "/admin/donations",         label: "Donations",     icon: Heart           },
+    { href: "/admin/volunteers",        label: "Volunteers",    icon: Megaphone       },
+    { href: "/admin/posts",             label: "Blog Posts",    icon: FileText        },
+    { href: "/admin/branch-updates",    label: "Branch Updates",icon: Bell            },
+    { href: "/admin/resources",         label: "Resources",     icon: BookOpen        },
+    { href: "/admin/activity",          label: "Activity Log",  icon: Activity        },
   ];
 
   const adminName = session?.user?.name || "Admin";

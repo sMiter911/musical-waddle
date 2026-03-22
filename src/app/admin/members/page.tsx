@@ -5,9 +5,9 @@ import { useState, useEffect } from "react";
 import {
   Search, Download, UserPlus,
   Mail, MoreVertical, ChevronUp, ChevronDown,
-  CheckCircle2, Clock, XCircle, Users, Eye,
+  CheckCircle2, Clock, XCircle, Users, Eye, Trash2, RefreshCw,
 } from "lucide-react";
-import { getAllMembers } from "@/lib/actions/admin";
+import { getAllMembers, softDeleteMember, reactivateMember } from "@/lib/actions/admin";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface Member {
@@ -17,15 +17,17 @@ interface Member {
   email: string;
   region: string;
   branch: string;
-  status: "Active" | "Pending" | "Inactive";
+  status: "Active" | "Pending" | "Inactive" | "Deleted";
   joined: string;
   rawDate: Date;
+  deletedAt: Date | null;
 }
 
 const STATUS_CONFIG = {
-  Active: { icon: CheckCircle2, color: "#1a6640", bg: "rgba(26,102,64,0.09)", border: "rgba(26,102,64,0.2)" },
-  Pending: { icon: Clock, color: "#b45309", bg: "rgba(180,83,9,0.09)", border: "rgba(180,83,9,0.2)" },
-  Inactive: { icon: XCircle, color: "#6b6b6b", bg: "rgba(107,107,107,0.08)", border: "rgba(107,107,107,0.2)" },
+  Active:   { icon: CheckCircle2, color: "#1a6640", bg: "rgba(26,102,64,0.09)",  border: "rgba(26,102,64,0.2)"  },
+  Pending:  { icon: Clock,        color: "#b45309", bg: "rgba(180,83,9,0.09)",   border: "rgba(180,83,9,0.2)"   },
+  Inactive: { icon: XCircle,      color: "#6b6b6b", bg: "rgba(107,107,107,0.08)",border: "rgba(107,107,107,0.2)"},
+  Deleted:  { icon: Trash2,       color: "#be123c", bg: "rgba(190,18,60,0.08)",  border: "rgba(190,18,60,0.2)"  },
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -55,6 +57,8 @@ export default function AdminMembersPage() {
   const [sortField, setSortField] = useState<keyof Member>("id");
   const [sortAsc, setSortAsc] = useState(true);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadMembers() {
@@ -96,7 +100,36 @@ export default function AdminMembersPage() {
     active: members.filter(m => m.status === "Active").length,
     pending: members.filter(m => m.status === "Pending").length,
     inactive: members.filter(m => m.status === "Inactive").length,
+    deleted: members.filter(m => m.status === "Deleted").length,
   };
+
+  async function handleSoftDelete(userId: string) {
+    if (!confirm("Soft-delete this member? Their account will be suspended but can be reactivated.")) return;
+    setActionLoading(userId);
+    setOpenMenu(null);
+    try {
+      await softDeleteMember(userId);
+      setMembers(prev => prev.map(m =>
+        m.userId === userId ? { ...m, status: "Deleted" as const, deletedAt: new Date() } : m
+      ));
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleReactivate(userId: string) {
+    if (!confirm("Reactivate this member's account?")) return;
+    setActionLoading(userId);
+    setOpenMenu(null);
+    try {
+      await reactivateMember(userId);
+      // Reload to get recalculated status
+      const fresh = await getAllMembers();
+      setMembers(fresh as Member[]);
+    } finally {
+      setActionLoading(null);
+    }
+  }
 
   const SortIcon = ({ field }: { field: keyof Member }) => (
     <span style={{ display: "inline-flex", flexDirection: "column", gap: 0, marginLeft: 4, opacity: sortField === field ? 1 : 0.3 }}>
@@ -164,9 +197,10 @@ export default function AdminMembersPage() {
         /* ── Stat strip ── */
         .mem-stats {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(5, 1fr);
           gap: 12px;
         }
+        @media (max-width: 900px) { .mem-stats { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 640px) { .mem-stats { grid-template-columns: repeat(2, 1fr); } }
 
         .mem-stat {
@@ -287,6 +321,7 @@ export default function AdminMembersPage() {
         .mem-pill.active-green { background: rgba(26,102,64,0.1); border-color: rgba(26,102,64,0.3); color: #1a6640; }
         .mem-pill.active-amber { background: rgba(180,83,9,0.1); border-color: rgba(180,83,9,0.3); color: #b45309; }
         .mem-pill.active-gray  { background: rgba(107,107,107,0.08); border-color: rgba(107,107,107,0.25); color: #4a4a4a; }
+        .mem-pill.active-red   { background: rgba(190,18,60,0.08); border-color: rgba(190,18,60,0.25); color: #be123c; }
 
         /* ── Table ── */
         .mem-table-wrap { overflow-x: auto; }
@@ -485,7 +520,7 @@ export default function AdminMembersPage() {
         }
       `}</style>
 
-      <div className="mem-page" onClick={() => setOpenMenu(null)}>
+      <div className="mem-page" onClick={() => { setOpenMenu(null); setMenuPos(null); }}>
 
         {/* ── Header ── */}
         <div className="mem-header">
@@ -510,6 +545,7 @@ export default function AdminMembersPage() {
             { label: "Active", val: counts.active, accent: "#1a6640" },
             { label: "Pending Review", val: counts.pending, accent: "#b45309" },
             { label: "Inactive", val: counts.inactive, accent: "#6b6b6b" },
+            { label: "Deleted", val: counts.deleted, accent: "#be123c" },
           ].map(({ label, val, accent }) => (
             <div key={label} className="mem-stat">
               <span className="mem-stat-label">{label}</span>
@@ -543,13 +579,14 @@ export default function AdminMembersPage() {
             </select>
 
             <div className="mem-status-pills">
-              {(["All", "Active", "Pending", "Inactive"] as const).map(s => {
+              {(["All", "Active", "Pending", "Inactive", "Deleted"] as const).map(s => {
                 const isActive = statusFilter === s;
                 const cls =
                   !isActive ? "" :
                     s === "Active" ? "active-green" :
                       s === "Pending" ? "active-amber" :
-                        s === "Inactive" ? "active-gray" : "active";
+                        s === "Inactive" ? "active-gray" :
+                          s === "Deleted" ? "active-red" : "active";
                 return (
                   <button
                     key={s}
@@ -659,28 +696,23 @@ export default function AdminMembersPage() {
                         </td>
 
                         {/* Actions */}
-                        <td className="mem-td" style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
+                        <td className="mem-td" onClick={e => e.stopPropagation()}>
                           <button
                             className={`mem-action-btn ${isOpen ? "open" : ""}`}
-                            onClick={() => setOpenMenu(isOpen ? null : member.id)}
+                            onClick={e => {
+                              if (isOpen) {
+                                setOpenMenu(null);
+                                setMenuPos(null);
+                              } else {
+                                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                setMenuPos({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+                                setOpenMenu(member.id);
+                              }
+                            }}
                             aria-label="Member actions"
                           >
                             <MoreVertical size={16} />
                           </button>
-
-                          {isOpen && (
-                            <div className="mem-dropdown">
-                              <Link href={`/admin/members/${member.userId}`} className="mem-dropdown-item">
-                                <Eye size={14} /> View Profile
-                              </Link>
-                              <button className="mem-dropdown-item">Edit Details</button>
-                              <button className="mem-dropdown-item">
-                                <Mail size={14} /> Send Email
-                              </button>
-                              <div className="mem-dropdown-divider" />
-                              <button className="mem-dropdown-item danger">Deactivate</button>
-                            </div>
-                          )}
                         </td>
                       </tr>
                     );
@@ -697,13 +729,61 @@ export default function AdminMembersPage() {
                 Showing <strong>{filtered.length}</strong> of <strong>{members.length}</strong> members
               </span>
               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11 }}>
-                {counts.active} active · {counts.pending} pending · {counts.inactive} inactive
+                {counts.active} active · {counts.pending} pending · {counts.inactive} inactive · {counts.deleted} deleted
               </span>
             </div>
           )}
         </div>
 
       </div>
+
+      {/* Fixed dropdown — renders outside table so it's never clipped */}
+      {openMenu && menuPos && (() => {
+        const member = members.find(m => m.id === openMenu);
+        if (!member) return null;
+        return (
+          <>
+            <div
+              style={{ position: "fixed", inset: 0, zIndex: 49 }}
+              onClick={() => { setOpenMenu(null); setMenuPos(null); }}
+            />
+            <div
+              className="mem-dropdown"
+              style={{ position: "fixed", top: menuPos.top, right: menuPos.right, zIndex: 50 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <Link href={`/admin/members/${member.userId}`} className="mem-dropdown-item">
+                <Eye size={14} /> View Profile
+              </Link>
+              <button className="mem-dropdown-item">Edit Details</button>
+              <button className="mem-dropdown-item">
+                <Mail size={14} /> Send Email
+              </button>
+              <div className="mem-dropdown-divider" />
+              {member.status === "Deleted" ? (
+                <button
+                  className="mem-dropdown-item"
+                  disabled={actionLoading === member.userId}
+                  style={{ color: "#1a6640" }}
+                  onClick={() => handleReactivate(member.userId)}
+                >
+                  <RefreshCw size={14} />
+                  {actionLoading === member.userId ? "Reactivating…" : "Reactivate"}
+                </button>
+              ) : (
+                <button
+                  className="mem-dropdown-item danger"
+                  disabled={actionLoading === member.userId}
+                  onClick={() => handleSoftDelete(member.userId)}
+                >
+                  <Trash2 size={14} />
+                  {actionLoading === member.userId ? "Deleting…" : "Soft Delete"}
+                </button>
+              )}
+            </div>
+          </>
+        );
+      })()}
     </>
   );
 }

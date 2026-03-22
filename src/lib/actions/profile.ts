@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { logActivity } from "@/lib/actions/activity";
+import { generateMemberId } from "@/lib/member-id";
 
 const completionFields = [
     "title", "firstName", "lastName", "gender", "identityNumber",
@@ -22,12 +23,6 @@ export async function calculateCompletion(member: any) {
     return Math.round((count / (completionFields.length + 1)) * 100);
 }
 
-function generateMemberId() {
-    const year = new Date().getFullYear();
-    const random = Math.floor(1000 + Math.random() * 9000);
-    return `PU-${year}-${random}`;
-}
-
 export async function updateProfile(formData: any) {
     const session = await auth.api.getSession({
         headers: await headers(),
@@ -39,16 +34,16 @@ export async function updateProfile(formData: any) {
 
     const userId = session.user.id;
 
-    // Convert date string to Date object
-    if (formData.dateOfBirth) {
-        formData.dateOfBirth = new Date(formData.dateOfBirth);
-    }
+    // Convert date string to Date object, treat empty string as null
+    formData.dateOfBirth = formData.dateOfBirth
+        ? new Date(formData.dateOfBirth)
+        : null;
 
     // Handle branch lookup
     let branchId = null;
     if (formData.branch) {
         const branch = await prisma.branch.findFirst({
-            where: { name: formData.branch }
+            where: { name: formData.branch },
         });
         if (branch) branchId = branch.id;
     }
@@ -86,13 +81,12 @@ export async function updateProfile(formData: any) {
     // Check completion
     const completion = await calculateCompletion(member);
 
-    // If 100% and still has a default CUID as membershipNumber (starts with c)
-    if (completion === 100 && member.membershipNumber.startsWith("c")) {
+    // Backfill: if member still has a raw CUID (pre-migration), assign proper ID
+    if (!member.membershipNumber.startsWith("PU-")) {
+        const membershipNumber = await generateMemberId();
         member = await prisma.member.update({
             where: { id: member.id },
-            data: {
-                membershipNumber: generateMemberId()
-            }
+            data: { membershipNumber },
         });
     }
 
@@ -169,4 +163,26 @@ export async function getMemberProfile() {
         structure: member.branch?.structure?.name || "",
         branchName: member.branch?.name || ""
     };
+}
+
+// ─── Account Deletion ──────────────────────────────────────────────────────────
+
+export async function deleteMyAccount(): Promise<{ success: boolean }> {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session?.user) throw new Error("Unauthorized");
+
+    const userId = session.user.id;
+
+    await prisma.$transaction(async (tx) => {
+        // Member record first (FK references)
+        await tx.member.deleteMany({ where: { userId } });
+        // User deletion cascades: Session, Account, Comment, Post, Notification
+        // ActivityLog uses SetNull so audit records are preserved
+        await tx.user.delete({ where: { id: userId } });
+    });
+
+    return { success: true };
 }

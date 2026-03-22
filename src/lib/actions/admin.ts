@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
+import { logActivity } from "@/lib/actions/activity";
 
 export async function getAllMembers() {
   const session = await auth.api.getSession({
@@ -32,6 +34,7 @@ export async function getAllMembers() {
     },
   });
 
+
   return members.map((member) => ({
     id: member.membershipNumber,
     userId: member.userId,
@@ -42,6 +45,7 @@ export async function getAllMembers() {
     status: determineStatus(member),
     joined: formatDate(member.user.createdAt),
     rawDate: member.user.createdAt,
+    deletedAt: member.deletedAt,
   }));
 }
 
@@ -127,7 +131,8 @@ export async function getMemberStats() {
   };
 }
 
-function determineStatus(member: any): "Active" | "Pending" | "Inactive" {
+function determineStatus(member: any): "Active" | "Pending" | "Inactive" | "Deleted" {
+  if (member.deletedAt) return "Deleted";
   const completionFields = [
     "title",
     "firstName",
@@ -260,6 +265,69 @@ function formatRelativeTime(date: Date): string {
   });
 }
 
+export async function getMembershipGrowth() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session || !session.user || (session.user as any).role !== "admin") {
+    throw new Error("Unauthorized");
+  }
+
+  const now = new Date();
+  const chartStart = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+  const startOfCurrentYear = new Date(now.getFullYear(), 0, 1);
+  const startOfLastYear = new Date(now.getFullYear() - 1, 0, 1);
+
+  const [chartMembers, thisYearCount, lastYearCount] = await Promise.all([
+    prisma.member.findMany({
+      where: { createdAt: { gte: chartStart } },
+      select: { createdAt: true },
+    }),
+    prisma.member.count({
+      where: { createdAt: { gte: startOfCurrentYear } },
+    }),
+    prisma.member.count({
+      where: {
+        createdAt: {
+          gte: startOfLastYear,
+          lt: startOfCurrentYear,
+        },
+      },
+    }),
+  ]);
+
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const buckets: { label: string; count: number }[] = [];
+
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    buckets.push({ label: MONTHS[d.getMonth()], count: 0 });
+  }
+
+  for (const member of chartMembers) {
+    const d = new Date(member.createdAt);
+    const monthDiff =
+      (now.getFullYear() - d.getFullYear()) * 12 +
+      (now.getMonth() - d.getMonth());
+    const idx = 11 - monthDiff;
+    if (idx >= 0 && idx < 12) {
+      buckets[idx].count++;
+    }
+  }
+
+  const counts = buckets.map((b) => b.count);
+  const labels = buckets.map((b) => b.label);
+  const maxCount = Math.max(...counts, 1);
+
+  const growthPct =
+    lastYearCount === 0
+      ? thisYearCount > 0 ? 100 : 0
+      : Math.round(((thisYearCount - lastYearCount) / lastYearCount) * 100);
+
+  return { labels, counts, maxCount, growthPct };
+}
+
 function formatDate(date: Date): string {
   const months = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -269,3 +337,46 @@ function formatDate(date: Date): string {
   return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
+// ─── Soft Delete / Reactivation ────────────────────────────────────────────────
+
+export async function softDeleteMember(userId: string): Promise<void> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user || (session.user as any).role !== "admin") {
+    throw new Error("Unauthorized");
+  }
+
+  await prisma.member.update({
+    where: { userId },
+    data: { deletedAt: new Date() },
+  });
+
+  await logActivity({
+    userId: session.user.id,
+    type: "MEMBER",
+    action: "soft-deleted a member account",
+    metadata: { targetUserId: userId },
+  });
+
+  revalidatePath("/admin/members");
+}
+
+export async function reactivateMember(userId: string): Promise<void> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user || (session.user as any).role !== "admin") {
+    throw new Error("Unauthorized");
+  }
+
+  await prisma.member.update({
+    where: { userId },
+    data: { deletedAt: null },
+  });
+
+  await logActivity({
+    userId: session.user.id,
+    type: "MEMBER",
+    action: "reactivated a member account",
+    metadata: { targetUserId: userId },
+  });
+
+  revalidatePath("/admin/members");
+}
