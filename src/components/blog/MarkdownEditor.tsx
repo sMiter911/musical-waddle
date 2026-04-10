@@ -26,6 +26,9 @@ const TOOLBAR: ToolbarItem[] = [
   { label: "1.",  title: "Ordered list",block: "1. " },
   { label: "</>", title: "Inline code", wrap: ["`", "`"] },
   { label: "```", title: "Code block",  wrap: ["```\n", "\n```"] },
+  { label: "🖼",  title: "Image",       wrap: ["![", "](https://example.com/image.jpg)"] },
+  { label: "▶",   title: "YouTube video", wrap: ["\n", "\nhttps://www.youtube.com/watch?v=VIDEO_ID\n"] },
+  { label: "🔗",  title: "Link",        wrap: ["[", "](https://example.com)"] },
 ];
 
 export default function MarkdownEditor({

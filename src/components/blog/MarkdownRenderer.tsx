@@ -1,10 +1,72 @@
 "use client";
 
-import ReactMarkdown from "react-markdown";
+import React from "react";
+import ReactMarkdown, { Components } from "react-markdown";
 
 interface Props {
   content: string;
 }
+
+const YOUTUBE_RE =
+  /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})(?:\S*)?/;
+
+function extractYouTubeId(text: string): string | null {
+  const m = text.match(YOUTUBE_RE);
+  return m ? m[1] : null;
+}
+
+function YouTubeEmbed({ videoId }: { videoId: string }) {
+  return (
+    <div className="blg-yt-wrap">
+      <iframe
+        src={`https://www.youtube.com/embed/${videoId}`}
+        title="YouTube video"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    </div>
+  );
+}
+
+const components: Components = {
+  p({ children }) {
+    const childArr = React.Children.toArray(children);
+
+    // If paragraph is a single plain-text YouTube URL, render embed
+    if (childArr.length === 1 && typeof childArr[0] === "string") {
+      const id = extractYouTubeId(childArr[0].trim());
+      if (id) return <YouTubeEmbed videoId={id} />;
+    }
+
+    // If paragraph is a single link that is a YouTube URL, render embed
+    if (childArr.length === 1 && React.isValidElement(childArr[0])) {
+      const el = childArr[0] as React.ReactElement<{ href?: string }>;
+      if (el.type === "a" && el.props.href) {
+        const id = extractYouTubeId(el.props.href);
+        if (id) return <YouTubeEmbed videoId={id} />;
+      }
+    }
+
+    return <p>{children}</p>;
+  },
+
+  a({ href, children }) {
+    if (href) {
+      const id = extractYouTubeId(href);
+      if (id) return <YouTubeEmbed videoId={id} />;
+    }
+    return <a href={href}>{children}</a>;
+  },
+
+  img({ src, alt }) {
+    return (
+      <span className="blg-img-wrap">
+        <img src={src} alt={alt || ""} loading="lazy" />
+        {alt && <span className="blg-img-caption">{alt}</span>}
+      </span>
+    );
+  },
+};
 
 export default function MarkdownRenderer({ content }: Props) {
   return (
@@ -74,9 +136,43 @@ export default function MarkdownRenderer({ content }: Props) {
           text-align: left;
         }
         .blg-prose th { background: var(--light, #f7f6f3); font-weight: 600; }
+
+        .blg-yt-wrap {
+          position: relative;
+          width: 100%;
+          padding-bottom: 56.25%;
+          margin: 1.5rem 0;
+          border-radius: 8px;
+          overflow: hidden;
+          background: #000;
+        }
+        .blg-yt-wrap iframe {
+          position: absolute;
+          top: 0; left: 0;
+          width: 100%; height: 100%;
+          border: none;
+        }
+
+        .blg-img-wrap {
+          display: block;
+          margin: 1.5rem 0;
+          text-align: center;
+        }
+        .blg-img-wrap img {
+          max-width: 100%;
+          border-radius: 8px;
+          margin: 0 auto;
+        }
+        .blg-img-caption {
+          display: block;
+          margin-top: 0.5rem;
+          font-size: 0.85rem;
+          color: var(--gray-500, #6b7280);
+          font-style: italic;
+        }
       `}</style>
       <div className="blg-prose">
-        <ReactMarkdown>{content}</ReactMarkdown>
+        <ReactMarkdown components={components}>{content}</ReactMarkdown>
       </div>
     </>
   );
