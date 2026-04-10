@@ -291,17 +291,24 @@ export default function HomePage() {
           <div
             style={{
               display: "flex",
-              gap: "clamp(0.75rem, 2vw, 1.5rem)",
+              flexDirection: "row",
+              gap: "1rem",
               justifyContent: "center",
-              flexWrap: "wrap",
-              flexDirection: "column",
+              alignItems: "center",
             }}
-            className="sm:flex-row"
           >
-            <Link href="/contributions" className="btn btn-secondary btn-lg">
+            <Link
+              href="/contributions"
+              className="btn btn-secondary btn-lg"
+              style={{ display: "inline-flex", width: "auto", flex: "none" }}
+            >
               Contribute Now
             </Link>
-            <Link href="/contact" className="btn btn-outline btn-lg">
+            <Link
+              href="/contact"
+              className="btn btn-outline btn-lg"
+              style={{ display: "inline-flex", width: "auto", flex: "none" }}
+            >
               Get in Touch
             </Link>
           </div>

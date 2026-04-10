@@ -6,7 +6,8 @@
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
       "Bash(find D:DevelopmentProjectspudemo-rebuild -type f -name prisma.config.* -o -name prisma.config.ts)",
-      "Bash(node -e \"const lr = require\\(''lucide-react''\\); console.log\\(''Reply:'', !!lr.Reply, ''MessageSquare:'', !!lr.MessageSquare, ''Bell:'', !!lr.Bell\\);\")"
+      "Bash(node -e \"const lr = require\\(''lucide-react''\\); console.log\\(''Reply:'', !!lr.Reply, ''MessageSquare:'', !!lr.MessageSquare, ''Bell:'', !!lr.Bell\\);\")",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }

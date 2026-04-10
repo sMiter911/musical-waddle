@@ -83,20 +83,19 @@ export default function HeroBanner({
           <div
             style={{
               display: "flex",
-              gap: "clamp(0.75rem, 2vw, 1.5rem)",
+              flexDirection: "row",
+              gap: "1rem",
               justifyContent: "center",
-              flexDirection: "column",
-              flexWrap: "wrap",
+              alignItems: "center",
             }}
-            className="sm:flex-row"
           >
             {primaryCta && (
-              <Link href={primaryCta.href} className="btn btn-primary btn-lg">
+              <Link href={primaryCta.href} className="btn btn-primary btn-lg" style={{ display: "inline-flex", width: "auto", flex: "none" }}>
                 {primaryCta.label}
               </Link>
             )}
             {secondaryCta && (
-              <Link href={secondaryCta.href} className="btn btn-outline btn-lg">
+              <Link href={secondaryCta.href} className="btn btn-outline btn-lg" style={{ display: "inline-flex", width: "auto", flex: "none" }}>
                 {secondaryCta.label}
               </Link>
             )}
