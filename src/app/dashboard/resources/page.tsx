@@ -162,7 +162,7 @@ export default function MemberResourcesPage() {
                       <div className="res-m-card-footer">
                         <span className="res-m-date">Added {formatDate(r.createdAt)}</span>
                         <a
-                          href={r.url}
+                          href={r.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="res-m-open-btn"

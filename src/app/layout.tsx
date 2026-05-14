@@ -25,6 +25,14 @@ export const metadata: Metadata = {
     "liberation",
     "human rights",
   ],
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
+  },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({

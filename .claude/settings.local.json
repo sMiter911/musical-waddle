@@ -15,7 +15,16 @@
       "Bash(npm audit *)",
       "Bash(Get-ChildItem -Path \"D:\\\\Development\\\\Projects\\\\pudemo-rebuild\" -Force)",
       "Bash(Select-Object Name, PSIsContainer)",
-      "Bash(Format-Table)"
+      "Bash(Format-Table)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Development\\\\Projects\\\\pudemo-rebuild\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(node *)",
+      "Bash(New-Item -ItemType Directory -Force -Path \"D:\\\\Development\\\\Projects\\\\pudemo-rebuild\\\\src\\\\lib\\\\storage\")",
+      "Bash(Out-Null)",
+      "Bash(New-Item -ItemType Directory -Force -Path \"D:\\\\Development\\\\Projects\\\\pudemo-rebuild\\\\public\\\\uploads\\\\resources\")",
+      "Bash(Write-Host \"Dirs created\")",
+      "PowerShell(Copy-Item *)"
     ]
   }
 }

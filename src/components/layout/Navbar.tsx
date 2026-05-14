@@ -3,8 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { Menu, X, LogOut, LayoutDashboard, Bell, MessageSquare, Reply, Megaphone } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X, LogOut, LayoutDashboard, Bell, MessageSquare, Reply, Megaphone, ChevronDown, BookOpen, ScrollText } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth-client";
 import {
   getUnreadCount,
@@ -13,14 +13,127 @@ import {
   type NotificationRow,
 } from "@/lib/actions/notifications";
 
-const navLinks = [
+type NavLink = { href: string; label: string };
+type NavDropdown = {
+  label: string;
+  children: { href: string; label: string; description: string; icon: React.ReactNode }[];
+};
+type NavItem = NavLink | NavDropdown;
+
+function isDropdown(item: NavItem): item is NavDropdown {
+  return "children" in item;
+}
+
+const navItems: NavItem[] = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
-  { href: "/manifesto", label: "Manifesto" },
+  {
+    label: "Manifesto",
+    children: [
+      {
+        href: "/manifesto",
+        label: "Party Manifesto",
+        description: "Our vision, values, and political programme.",
+        icon: <ScrollText size={16} />,
+      },
+      {
+        href: "/resources",
+        label: "Resources",
+        description: "Documents, guides, and materials.",
+        icon: <BookOpen size={16} />,
+      },
+    ],
+  },
   { href: "/blog", label: "News" },
   { href: "/contributions", label: "Contributions" },
   { href: "/contact", label: "Contact" },
 ];
+
+// ─── Desktop dropdown item ────────────────────────────────────────────────────
+
+function DesktopDropdown({ item }: { item: NavDropdown }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLLIElement>(null);
+  const pathname = usePathname();
+  const isActive = item.children.some((c) => pathname === c.href || pathname.startsWith(c.href + "/"));
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  return (
+    <li ref={ref} style={{ position: "relative" }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          display: "flex", alignItems: "center", gap: 4,
+          fontSize: "0.938rem", fontWeight: 500,
+          color: isActive ? "var(--primary)" : "var(--gray-600)",
+          background: "none", border: "none", cursor: "pointer",
+          fontFamily: "inherit", padding: 0, transition: "color 0.15s",
+        }}
+        className="hover:text-primary"
+        aria-expanded={open}
+        aria-haspopup="true"
+      >
+        {item.label}
+        <ChevronDown
+          size={14}
+          style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+        />
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 10px)", left: "50%",
+          transform: "translateX(-50%)",
+          background: "#fff", border: "1px solid var(--gray-200)",
+          borderRadius: 12, boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+          width: 260, zIndex: 200, overflow: "hidden",
+          animation: "fadeIn 0.15s ease",
+        }}>
+          {item.children.map((child, i) => (
+            <Link
+              key={child.href}
+              href={child.href}
+              onClick={() => setOpen(false)}
+              style={{
+                display: "flex", alignItems: "flex-start", gap: 12,
+                padding: "12px 16px",
+                borderBottom: i < item.children.length - 1 ? "1px solid var(--gray-100)" : "none",
+                textDecoration: "none", transition: "background 0.15s",
+                color: "inherit",
+              }}
+              className="hover:bg-light"
+            >
+              <div style={{
+                width: 34, height: 34, borderRadius: 8, flexShrink: 0,
+                background: "rgba(26,102,64,0.08)", color: "var(--primary)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginTop: 1,
+              }}>
+                {child.icon}
+              </div>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--dark)", lineHeight: 1.3 }}>
+                  {child.label}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--gray-500)", marginTop: 2, lineHeight: 1.4 }}>
+                  {child.description}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </li>
+  );
+}
 
 function formatRelative(date: Date): string {
   const diff = Date.now() - new Date(date).getTime();
@@ -238,6 +351,7 @@ function NotificationBell() {
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const { data: session } = useSession();
 
   useEffect(() => { setMounted(true); }, []);
@@ -288,17 +402,21 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <ul style={{ alignItems: "center", gap: "1.5rem", listStyle: "none" }} className="hidden lg:flex">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  style={{ fontSize: "0.938rem", fontWeight: 500, color: "var(--gray-600)", transition: "color var(--transition)", position: "relative" }}
-                  className="hover:text-primary"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            {navItems.map((item) =>
+              isDropdown(item) ? (
+                <DesktopDropdown key={item.label} item={item} />
+              ) : (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    style={{ fontSize: "0.938rem", fontWeight: 500, color: "var(--gray-600)", transition: "color var(--transition)", position: "relative" }}
+                    className="hover:text-primary"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              )
+            )}
           </ul>
 
           {/* Desktop CTA */}
@@ -389,24 +507,74 @@ export default function Navbar() {
             }}
           >
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "clamp(0.125rem, 1vw, 0.25rem)" }}>
-              {navLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    onClick={() => setIsOpen(false)}
-                    style={{
-                      display: "block",
-                      padding: "clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)",
-                      fontSize: "clamp(0.875rem, 2vw, 1rem)", fontWeight: 500,
-                      color: "var(--dark)", borderRadius: "var(--radius)",
-                      transition: "background var(--transition)",
-                    }}
-                    className="hover:bg-light"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+              {navItems.map((item) => {
+                if (isDropdown(item)) {
+                  const expanded = mobileExpanded === item.label;
+                  return (
+                    <li key={item.label}>
+                      <button
+                        onClick={() => setMobileExpanded(expanded ? null : item.label)}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          width: "100%", padding: "clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)",
+                          fontSize: "clamp(0.875rem, 2vw, 1rem)", fontWeight: 500,
+                          color: "var(--dark)", borderRadius: "var(--radius)",
+                          background: expanded ? "var(--light)" : "transparent",
+                          border: "none", cursor: "pointer", fontFamily: "inherit",
+                          transition: "background var(--transition)",
+                        }}
+                      >
+                        {item.label}
+                        <ChevronDown
+                          size={15}
+                          style={{ transition: "transform 0.2s", transform: expanded ? "rotate(180deg)" : "rotate(0deg)", color: "var(--gray-400)" }}
+                        />
+                      </button>
+                      {expanded && (
+                        <ul style={{ listStyle: "none", paddingLeft: "clamp(0.75rem, 3vw, 1rem)", display: "flex", flexDirection: "column", gap: 2, marginBottom: 4 }}>
+                          {item.children.map((child) => (
+                            <li key={child.href}>
+                              <Link
+                                href={child.href}
+                                onClick={() => { setIsOpen(false); setMobileExpanded(null); }}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 10,
+                                  padding: "10px clamp(0.75rem, 3vw, 1rem)",
+                                  fontSize: "clamp(0.813rem, 2vw, 0.9rem)", fontWeight: 500,
+                                  color: "var(--gray-600)", borderRadius: "var(--radius)",
+                                  textDecoration: "none", transition: "background var(--transition)",
+                                }}
+                                className="hover:bg-light hover:text-primary"
+                              >
+                                <span style={{ color: "var(--primary)", opacity: 0.8 }}>{child.icon}</span>
+                                {child.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                }
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      style={{
+                        display: "block",
+                        padding: "clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)",
+                        fontSize: "clamp(0.875rem, 2vw, 1rem)", fontWeight: 500,
+                        color: "var(--dark)", borderRadius: "var(--radius)",
+                        transition: "background var(--transition)",
+                      }}
+                      className="hover:bg-light"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
             <div style={{
               marginTop: "clamp(0.75rem, 2vw, 1rem)",

@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
-  LayoutDashboard, Users, Heart, Megaphone, FileText,
+  LayoutDashboard, Users, Heart, Inbox, FileText,
   Settings, LogOut, ShieldCheck, Bell, BookOpen, Activity,
 } from "lucide-react";
 import { signOut, useSession } from "@/lib/auth-client";
@@ -11,6 +12,24 @@ import { signOut, useSession } from "@/lib/auth-client";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { data: session } = useSession();
   const pathname = usePathname();
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  // Poll unread message count every 60 s
+  useEffect(() => {
+    let mounted = true;
+    async function fetchCount() {
+      try {
+        const res = await fetch("/api/messages/unread-count");
+        if (res.ok && mounted) {
+          const { count } = await res.json();
+          setUnreadMessages(count);
+        }
+      } catch { /* ignore */ }
+    }
+    fetchCount();
+    const timer = setInterval(fetchCount, 60_000);
+    return () => { mounted = false; clearInterval(timer); };
+  }, []);
 
   const handleSignOut = async () => {
     await signOut({
@@ -19,14 +38,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const sidebarLinks = [
-    { href: "/admin",                   label: "Dashboard",     icon: LayoutDashboard },
-    { href: "/admin/members",           label: "Members",       icon: Users           },
-    { href: "/admin/donations",         label: "Donations",     icon: Heart           },
-    { href: "/admin/volunteers",        label: "Volunteers",    icon: Megaphone       },
-    { href: "/admin/posts",             label: "Blog Posts",    icon: FileText        },
-    { href: "/admin/branch-updates",    label: "Branch Updates",icon: Bell            },
-    { href: "/admin/resources",         label: "Resources",     icon: BookOpen        },
-    { href: "/admin/activity",          label: "Activity Log",  icon: Activity        },
+    { href: "/admin",                   label: "Dashboard",     icon: LayoutDashboard, badge: 0               },
+    { href: "/admin/members",           label: "Members",       icon: Users,           badge: 0               },
+    { href: "/admin/donations",         label: "Donations",     icon: Heart,           badge: 0               },
+    { href: "/admin/messages",          label: "Messages",      icon: Inbox,           badge: unreadMessages  },
+    { href: "/admin/posts",             label: "Blog Posts",    icon: FileText,        badge: 0               },
+    { href: "/admin/branch-updates",    label: "Branch Updates",icon: Bell,            badge: 0               },
+    { href: "/admin/resources",         label: "Resources",     icon: BookOpen,        badge: 0               },
+    { href: "/admin/activity",          label: "Activity Log",  icon: Activity,        badge: 0               },
   ];
 
   const adminName = session?.user?.name || "Admin";
@@ -142,6 +161,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           border-radius: 50%;
           position: absolute;
           right: 12px;
+        }
+        .adm-nav-badge {
+          margin-left: auto;
+          background: #be123c;
+          color: #fff;
+          font-size: 10px;
+          font-weight: 700;
+          line-height: 1;
+          padding: 2px 6px;
+          border-radius: 999px;
+          min-width: 18px;
+          text-align: center;
         }
 
         /* Sidebar footer */
@@ -319,6 +350,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 >
                   <link.icon size={17} />
                   {link.label}
+                  {link.badge > 0 && !isActive && (
+                    <span className="adm-nav-badge">{link.badge}</span>
+                  )}
                   {isActive && <span className="adm-nav-dot" />}
                 </Link>
               );

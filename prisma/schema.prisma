@@ -146,13 +146,18 @@ model Volunteer {
 }
 
 model ContactMessage {
-  id      String @id @default(cuid())
+  id      String  @id @default(cuid())
   name    String
   email   String
+  phone   String?
   subject String
   message String
 
+  isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isRead, createdAt(sort: Desc)])
 }
 
 model ActivityLog {
@@ -279,13 +284,21 @@ model BranchUpdate {
 model Resource {
   id          String   @id @default(cuid())
   title       String
-  description String?
-  url         String
+  description String?  @db.Text
+  fileUrl     String
+  fileType    String?
+  fileSize    Int?
   category    String   @default("General")
+  isPublished Boolean  @default(true)
+  slug        String?  @unique
+  thumbnail   String?
+  tags        String[] @default([])
   authorId    String
   author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([createdAt(sort: Desc)])
+  @@index([isPublished, createdAt(sort: Desc)])
+  @@index([category])
 }
