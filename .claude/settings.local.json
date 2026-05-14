@@ -7,7 +7,15 @@
       "Bash(npx tsc:*)",
       "Bash(find D:DevelopmentProjectspudemo-rebuild -type f -name prisma.config.* -o -name prisma.config.ts)",
       "Bash(node -e \"const lr = require\\(''lucide-react''\\); console.log\\(''Reply:'', !!lr.Reply, ''MessageSquare:'', !!lr.MessageSquare, ''Bell:'', !!lr.Bell\\);\")",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npm outdated *)",
+      "Bash(Get-Content \"C:\\\\Users\\\\d_wan\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--Development-Projects-pudemo-rebuild\\\\ae2e2221-3933-4926-8ff4-1915f78f69ec\\\\tasks\\\\b3gpo8fuz.output\" -Wait)",
+      "Bash(Select-String -Pattern \"added|warn|error|npm|changed|audit\" --SimpleMatch)",
+      "Bash(Get-Content *)",
+      "Bash(npm audit *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Development\\\\Projects\\\\pudemo-rebuild\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Format-Table)"
     ]
   }
 }
