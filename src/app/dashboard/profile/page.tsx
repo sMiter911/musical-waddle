@@ -787,14 +787,21 @@ export default function MemberProfilePage() {
                       id="avatar-file" type="file" accept="image/*" className="sr-only"
                       onChange={(e) => {
                         const f = e.target.files?.[0];
-                        if (f) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            const base64String = reader.result as string;
-                            setAvatarUrl(base64String);
-                          };
-                          reader.readAsDataURL(f);
-                        }
+                        if (!f) return;
+                        const img = new Image();
+                        const objectUrl = URL.createObjectURL(f);
+                        img.onload = () => {
+                          const MAX = 256;
+                          const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+                          const canvas = document.createElement("canvas");
+                          canvas.width = Math.round(img.width * scale);
+                          canvas.height = Math.round(img.height * scale);
+                          canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+                          const base64 = canvas.toDataURL("image/jpeg", 0.8);
+                          setAvatarUrl(base64);
+                          URL.revokeObjectURL(objectUrl);
+                        };
+                        img.src = objectUrl;
                       }}
                     />
                   </label>
