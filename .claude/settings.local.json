@@ -29,7 +29,8 @@
       "Bash(New-Item -ItemType File -Force \"D:\\\\Development\\\\Projects\\\\pudemo-rebuild\\\\public\\\\uploads\\\\.gitkeep\")",
       "Bash(Write-Output \"done\")",
       "PowerShell(New-Item *)",
-      "PowerShell(Remove-Item *)"
+      "PowerShell(Remove-Item *)",
+      "Bash(git push *)"
     ]
   }
 }
