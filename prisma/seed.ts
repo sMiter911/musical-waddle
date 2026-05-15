@@ -1,10 +1,21 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+import { parse } from "pg-connection-string";
 import * as fs from "fs";
 import * as path from "path";
 import "dotenv/config";
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const config = parse(process.env.DATABASE_URL!);
+const pool = new Pool({
+    host: config.host ?? undefined,
+    port: config.port ? Number(config.port) : undefined,
+    database: config.database ?? undefined,
+    user: config.user ?? undefined,
+    password: config.password ?? undefined,
+    ssl: { rejectUnauthorized: false },
+});
+const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {

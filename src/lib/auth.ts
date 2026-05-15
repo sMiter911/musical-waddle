@@ -13,6 +13,7 @@ export const auth = betterAuth({
             enabled: true,
             trustedProviders: ["facebook", "google"],
             allowDifferentEmails: true,
+            requireLocalEmailVerified: false,
         },
     },
     databaseHooks: {
