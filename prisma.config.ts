@@ -1,6 +1,7 @@
-
 import "dotenv/config";
 import { defineConfig, env } from "prisma/config";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -8,10 +9,12 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    // DIRECT_URL = unpooled connection (port 5432)
-    // Required for migrations — pgBouncer/pooler can't run DDL
-    // Local dev: same value as DATABASE_URL
-    // Supabase prod: use the "Direct connection" string, not the pooler
     url: env("DIRECT_URL"),
+  },
+  migrate: {
+    async adapter(env) {
+      const pool = new Pool({ connectionString: env.DIRECT_URL });
+      return new PrismaPg(pool);
+    },
   },
 });
