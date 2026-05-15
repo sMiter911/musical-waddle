@@ -59,7 +59,7 @@ function FileIcon({ type }: { type: string | null }) {
 }
 
 function isExternal(url: string) {
-  return url.startsWith("http://") || url.startsWith("https://");
+  return (url.startsWith("http://") || url.startsWith("https://")) && !url.startsWith("data:");
 }
 
 // ─── Skeleton card ────────────────────────────────────────────────────────────

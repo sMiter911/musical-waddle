@@ -44,6 +44,10 @@ function isExternalUrl(url: string) {
   return url.startsWith("http://") || url.startsWith("https://");
 }
 
+function isUploadedFile(url: string) {
+  return url.startsWith("data:") || url.startsWith("/uploads/");
+}
+
 // ─── Upload hook ──────────────────────────────────────────────────────────────
 
 type UploadState = "idle" | "uploading" | "done" | "error";
@@ -103,14 +107,14 @@ interface ResourceFormProps {
 
 function ResourceForm({ mode, initial, onClose, onSaved }: ResourceFormProps) {
   const [inputMode, setInputMode] = useState<InputMode>(
-    initial ? (initial.fileUrl.startsWith("/uploads/") ? "file" : "url") : "file"
+    initial ? (isUploadedFile(initial.fileUrl) ? "file" : "url") : "file"
   );
   const [title, setTitle]           = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [category, setCategory]     = useState(initial?.category ?? "General");
   const [isPublished, setPublished] = useState(initial?.isPublished ?? true);
   const [tags, setTags]             = useState(initial?.tags?.join(", ") ?? "");
-  const [urlInput, setUrlInput]     = useState(initial && !initial.fileUrl.startsWith("/uploads/") ? initial.fileUrl : "");
+  const [urlInput, setUrlInput]     = useState(initial && !isUploadedFile(initial.fileUrl) ? initial.fileUrl : "");
   const [isDragging, setDragging]   = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError]   = useState("");
@@ -136,7 +140,7 @@ function ResourceForm({ mode, initial, onClose, onSaved }: ResourceFormProps) {
     if (!title.trim()) { setFormError("Title is required."); return; }
 
     const fileUrl = inputMode === "file"
-      ? uploadResult?.url ?? (initial?.fileUrl.startsWith("/uploads/") ? initial.fileUrl : "")
+      ? uploadResult?.url ?? (initial?.fileUrl && isUploadedFile(initial.fileUrl) ? initial.fileUrl : "")
       : urlInput.trim();
 
     if (!fileUrl) {
@@ -232,9 +236,9 @@ function ResourceForm({ mode, initial, onClose, onSaved }: ResourceFormProps) {
                 <>
                   <Upload size={22} style={{ opacity: 0.35 }} />
                   <div className="rf-drop-text">Drag & drop or <span className="rf-drop-link">browse</span></div>
-                  <div className="rf-drop-sub">PDF, DOCX, XLSX, images — max 50 MB</div>
-                  {initial?.fileUrl.startsWith("/uploads/") && (
-                    <div className="rf-drop-current">Current: {initial.fileUrl.split("/").pop()}</div>
+                  <div className="rf-drop-sub">PDF, DOCX, XLSX, images — max 12 MB</div>
+                  {initial?.fileUrl && isUploadedFile(initial.fileUrl) && (
+                    <div className="rf-drop-current">Current: {initial.fileUrl.startsWith("data:") ? initial.fileType ?? "uploaded file" : initial.fileUrl.split("/").pop()}</div>
                   )}
                 </>
               )}
@@ -242,7 +246,7 @@ function ResourceForm({ mode, initial, onClose, onSaved }: ResourceFormProps) {
                 <><Loader2 size={22} className="animate-spin" style={{ opacity: 0.5 }} /><div className="rf-drop-text">Uploading…</div></>
               )}
               {uploadState === "done" && uploadResult && (
-                <><CheckCircle size={22} color="#1a6640" /><div className="rf-drop-text" style={{ color: "#1a6640" }}>{uploadResult.url.split("/").pop()}</div><div className="rf-drop-sub">{formatBytes(uploadResult.fileSize)}</div></>
+                <><CheckCircle size={22} color="#1a6640" /><div className="rf-drop-text" style={{ color: "#1a6640" }}>{uploadResult.fileType ?? "File uploaded"}</div><div className="rf-drop-sub">{formatBytes(uploadResult.fileSize)}</div></>
               )}
               {uploadState === "error" && (
                 <><X size={22} color="#be123c" /><div className="rf-drop-text" style={{ color: "#be123c" }}>{uploadError}</div></>
@@ -530,10 +534,10 @@ export default function AdminResourcesPage() {
                       <td>
                         <div className="res-file-cell">
                           {fileIcon(r.fileType)}
-                          <a href={r.fileUrl} target="_blank" rel="noopener noreferrer" title={r.fileUrl}>
-                            {isExternalUrl(r.fileUrl) ? new URL(r.fileUrl).hostname : r.fileUrl.split("/").pop()}
+                          <a href={r.fileUrl} target={r.fileUrl.startsWith("data:") ? undefined : "_blank"} rel="noopener noreferrer" download={r.fileUrl.startsWith("data:") || undefined} title={isExternalUrl(r.fileUrl) ? r.fileUrl : undefined}>
+                            {r.fileUrl.startsWith("data:") ? (r.fileType ?? "Uploaded file") : isExternalUrl(r.fileUrl) ? new URL(r.fileUrl).hostname : r.fileUrl.split("/").pop()}
                           </a>
-                          <ExternalLink size={10} style={{ flexShrink: 0 }} />
+                          {!r.fileUrl.startsWith("data:") && <ExternalLink size={10} style={{ flexShrink: 0 }} />}
                         </div>
                         {r.fileSize && <div className="res-size">{formatBytes(r.fileSize)}</div>}
                       </td>

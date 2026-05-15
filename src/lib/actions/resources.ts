@@ -5,7 +5,6 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/lib/actions/activity";
-import { getStorageAdapter } from "@/lib/storage";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -211,14 +210,6 @@ export async function deleteResource(id: string): Promise<void> {
   });
 
   await prisma.resource.delete({ where: { id } });
-
-  // Clean up local file if stored locally
-  if (resource?.fileUrl?.startsWith("/uploads/")) {
-    try {
-      const adapter = await getStorageAdapter();
-      await adapter.delete(resource.fileUrl);
-    } catch { /* non-fatal */ }
-  }
 
   await logActivity({
     userId: session.user.id,

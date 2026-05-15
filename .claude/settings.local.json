@@ -24,7 +24,12 @@
       "Bash(Out-Null)",
       "Bash(New-Item -ItemType Directory -Force -Path \"D:\\\\Development\\\\Projects\\\\pudemo-rebuild\\\\public\\\\uploads\\\\resources\")",
       "Bash(Write-Host \"Dirs created\")",
-      "PowerShell(Copy-Item *)"
+      "PowerShell(Copy-Item *)",
+      "Bash(New-Item -ItemType Directory -Force \"D:\\\\Development\\\\Projects\\\\pudemo-rebuild\\\\public\\\\uploads\")",
+      "Bash(New-Item -ItemType File -Force \"D:\\\\Development\\\\Projects\\\\pudemo-rebuild\\\\public\\\\uploads\\\\.gitkeep\")",
+      "Bash(Write-Output \"done\")",
+      "PowerShell(New-Item *)",
+      "PowerShell(Remove-Item *)"
     ]
   }
 }
