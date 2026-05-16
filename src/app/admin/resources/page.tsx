@@ -45,7 +45,7 @@ function isExternalUrl(url: string) {
 }
 
 function isUploadedFile(url: string) {
-  return url.startsWith("data:") || url.startsWith("/uploads/");
+  return url.startsWith("data:") || url.includes("/uploads/");
 }
 
 // ─── Upload hook ──────────────────────────────────────────────────────────────
@@ -534,8 +534,8 @@ export default function AdminResourcesPage() {
                       <td>
                         <div className="res-file-cell">
                           {fileIcon(r.fileType)}
-                          <a href={r.fileUrl} target={r.fileUrl.startsWith("data:") ? undefined : "_blank"} rel="noopener noreferrer" download={r.fileUrl.startsWith("data:") || undefined} title={isExternalUrl(r.fileUrl) ? r.fileUrl : undefined}>
-                            {r.fileUrl.startsWith("data:") ? (r.fileType ?? "Uploaded file") : isExternalUrl(r.fileUrl) ? new URL(r.fileUrl).hostname : r.fileUrl.split("/").pop()}
+                          <a href={`/api/resources/${r.id}/download`} target="_blank" rel="noopener noreferrer" title={r.fileUrl}>
+                            {isExternalUrl(r.fileUrl) ? new URL(r.fileUrl).hostname : r.fileUrl.split("/").pop()}
                           </a>
                           {!r.fileUrl.startsWith("data:") && <ExternalLink size={10} style={{ flexShrink: 0 }} />}
                         </div>

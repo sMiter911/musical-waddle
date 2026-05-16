@@ -110,14 +110,13 @@ function ResourceCard({ r }: { r: PublicResourceRow }) {
       <div className="pub-card-footer">
         <span className="pub-card-date">{formatDate(r.createdAt)}</span>
         <a
-          href={r.fileUrl}
+          href={`/api/resources/${r.id}/download`}
           target="_blank"
           rel="noopener noreferrer"
-          download={!isExternal(r.fileUrl) ? true : undefined}
           className="pub-download-btn"
         >
-          {isExternal(r.fileUrl) ? <ExternalLink size={13} /> : <Download size={13} />}
-          {isExternal(r.fileUrl) ? "Open" : "Download"}
+          <Download size={13} />
+          Download
         </a>
       </div>
     </div>

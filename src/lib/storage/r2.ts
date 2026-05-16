@@ -79,4 +79,15 @@ export class R2StorageAdapter implements StorageAdapter {
     const key = url.replace(`${base}/`, "");
     await s3.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
   }
+
+  async getPresignedUrl(key: string, expiresIn = 3600): Promise<string> {
+    const { GetObjectCommand } = await import("@aws-sdk/client-s3");
+    const { getSignedUrl } = await import("@aws-sdk/s3-request-presigner");
+    const s3 = await this.client();
+    return getSignedUrl(
+      s3,
+      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+      { expiresIn }
+    );
+  }
 }
