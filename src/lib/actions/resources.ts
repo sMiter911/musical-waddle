@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/lib/actions/activity";
+import { getStorageAdapter } from "@/lib/storage";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -210,6 +211,15 @@ export async function deleteResource(id: string): Promise<void> {
   });
 
   await prisma.resource.delete({ where: { id } });
+
+  if (resource?.fileUrl) {
+    try {
+      const adapter = await getStorageAdapter();
+      await adapter.delete(resource.fileUrl);
+    } catch {
+      // External URL or storage not configured — skip
+    }
+  }
 
   await logActivity({
     userId: session.user.id,
